@@ -30,7 +30,9 @@ namespace StudentAI
         /// <returns> Returns the best chess move the player has for the given chess board</returns>
         public ChessMove GetNextMove(ChessBoard board, ChessColor myColor)
         {
-            throw (new NotImplementedException());
+            int i = 1;
+            return new ChessMove(new ChessLocation(1,1), new ChessLocation(1,1));
+            //throw (new NotImplementedException());
         }
 
         /// <summary>
@@ -42,7 +44,9 @@ namespace StudentAI
         /// <returns>Returns true if the move was valid</returns>
         public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)
         {
-            throw (new NotImplementedException());
+            Console.WriteLine("Move valid");
+            return true;
+            //throw (new NotImplementedException());
         }
 
         #endregion
