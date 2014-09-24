@@ -12,3 +12,16 @@ C:\Users\rjelte.HM\fall2014\4470-AI\UvsChess\uvschess-1.0.2.c\uvschess-1.0.2\Fra
 C:\Users\rjelte.HM\fall2014\4470-AI\UvsChess\uvschess-1.0.2.c\uvschess-1.0.2\Framework\obj\x86\Debug\UvsChess.pdb
 C:\Users\10006678\Documents\Courses\CS 4470\Labs\Chess Lab\2014UvsChess\Framework\obj\x86\Debug\UvsChess.exe
 C:\Users\10006678\Documents\Courses\CS 4470\Labs\Chess Lab\2014UvsChess\Framework\obj\x86\Debug\UvsChess.pdb
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\bin\x86\Debug\UvsChess.exe.config
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.exe
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.pdb
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\bin\x86\Debug\UvsChess.exe
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\bin\x86\Debug\UvsChess.pdb
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\Framework.csprojResolveAssemblyReference.cache
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.Gui.GuiChessBoard.resources
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.Gui.WinGui.resources
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.Gui.AboutUvsChess.resources
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.Gui.Preferences.resources
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.Gui.GuiDecisionTree.resources
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\UvsChess.Gui.MessageBox.resources
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\Framework\obj\x86\Debug\Framework.csproj.GenerateResource.Cache
