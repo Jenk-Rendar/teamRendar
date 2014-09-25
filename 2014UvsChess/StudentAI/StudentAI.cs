@@ -41,7 +41,7 @@ namespace StudentAI
         public ChessMove GetNextMove(ChessBoard board, ChessColor myColor)
         {
 
-            return new ChessMove(new ChessLocation(2,6), new ChessLocation(2,4));
+            return new ChessMove(new ChessLocation(2,1), new ChessLocation(2,2));
         }
 
         /// <summary>
@@ -72,23 +72,39 @@ namespace StudentAI
             }
             else if(cp == ChessPiece.BlackBishop || cp == ChessPiece.WhiteBishop)
             {
-
+                validMove = CheckBishop(boardBeforeMove, cp, moveToCheck, color);
             }
             else if(cp == ChessPiece.BlackRook || cp == ChessPiece.WhiteRook)
             {
-
+                validMove = CheckRook(boardBeforeMove, cp, moveToCheck, color);
             }
             else if(cp == ChessPiece.BlackQueen || cp == ChessPiece.WhiteQueen)
             {
-
+                validMove = CheckQueen(boardBeforeMove, cp, moveToCheck, color);
             }
             else if(cp == ChessPiece.BlackKing || cp == ChessPiece.WhiteKing)
             {
-
+                validMove = CheckKing(boardBeforeMove, cp, moveToCheck, color);
             }
             return validMove;
         }
 
+        bool CheckQueen(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
+        {
+            int x1 = moveToCheck.From.X;
+            int x2 = moveToCheck.To.X;
+            int y1 = moveToCheck.From.Y;
+            int y2 = moveToCheck.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool movement = true;
+            if (Math.Abs(d_x) == Math.Abs(d_y))
+                movement = CheckBishop(board, cp, moveToCheck, color);
+            else if (d_x == 0 || d_y == 0)
+                movement = CheckRook(board, cp, moveToCheck, color);
+            return movement;
+        }
 
         bool CheckPawn(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
         {
@@ -135,6 +151,131 @@ namespace StudentAI
             if ( ((Math.Abs(d_x) == 1 && Math.Abs(d_y) == 2) || (Math.Abs(d_x) == 2 && Math.Abs(d_y) == 1)))
                 return true;
             return false;
+        }
+
+        bool CheckKing(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
+        {
+            int x1 = moveToCheck.From.X;
+            int x2 = moveToCheck.To.X;
+            int y1 = moveToCheck.From.Y;
+            int y2 = moveToCheck.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            if (!(CheckColorAtDest(board, color, x2, y2)))
+                return false;
+            if (Math.Abs(d_x) <= 1 && Math.Abs(d_y) <= 1)
+                return true;
+            return false;
+        }
+
+        bool CheckRook(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
+        {
+            int x1 = moveToCheck.From.X;
+            int x2 = moveToCheck.To.X;
+            int y1 = moveToCheck.From.Y;
+            int y2 = moveToCheck.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool moveable = true;
+            if (d_x == 0)
+            {
+                if(d_y > 0)
+                {
+                    for (int i = 1; i < d_y; --i)
+                    {
+                        if (board[x1 + i,y1] != ChessPiece.Empty)
+                            moveable = false;
+                    }
+                }
+                else
+                {
+                    for(int i = -1; i > d_y; --i)
+                    {
+                        if (board[x1, y1+i] != ChessPiece.Empty)
+                            moveable = false;
+                    }
+                }
+            }
+            else if (d_y == 0)
+            {
+                if(d_x > 0)
+                {
+                    for(int i = 1; i < d_x; ++i)
+                    {
+                        if(board[x1,y1+i] != ChessPiece.Empty)
+                        {
+                            moveable = false;
+                        }
+                    }
+                }
+                else
+                {
+                    for(int i = -1; i > d_x; --i)
+                    {
+                        if (board[x1, y1 + i] != ChessPiece.Empty)
+                            moveable = false;
+                    }
+                }
+            }
+            else moveable = false;
+            return moveable;
+        }
+
+        bool CheckBishop(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
+        {
+            int x1 = moveToCheck.From.X;
+            int x2 = moveToCheck.To.X;
+            int y1 = moveToCheck.From.Y;
+            int y2 = moveToCheck.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool moveable = true;
+            if (Math.Abs(d_x) == Math.Abs(d_y))
+            {
+                if(d_y > 0)
+                {
+                    if(d_x > 0)
+                    {
+                        for(int i = 1; i < d_x; ++i)
+                        {
+                            if (board[x1 + i, y1 + i] != ChessPiece.Empty)
+                                moveable = false;
+                        }
+                    }
+                    else
+                    {
+                        for(int i = -1; i > d_x; --i)
+                        {
+                            if (board[x1 - i, y1 + i] != ChessPiece.Empty)
+                                moveable = false;
+                        }
+                    }
+                }
+                else
+                {
+                    if(d_x > 0)
+                    {
+                        for(int i = 1; i < d_x; ++i)
+                        {
+                            if (board[x1 + i, y1 - i] != ChessPiece.Empty)
+                                moveable = false;
+                        }
+                    }
+                    else
+                    {
+                        for(int i = -1; i > d_x; --i)
+                        {
+                            if (board[x1 + i, y1 + i] != ChessPiece.Empty)
+                                moveable = false;
+                        }
+                    }
+                }
+            }
+            else moveable = false;
+            return moveable;
         }
 
         //Checks to see if the color at the dest is the same color as the piece moving there.
