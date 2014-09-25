@@ -55,23 +55,20 @@ namespace StudentAI
         {
             bool valid = false;
             ChessPiece cp = boardBeforeMove[moveToCheck.From];
-            CheckWhichPieceMoved(cp, moveToCheck, colorOfPlayerMoving);
-            if(cp == ChessPiece.WhitePawn)
-            {
-                Console.WriteLine("Test");
-            }
+            valid = CheckWhichPieceMoved(boardBeforeMove,cp, moveToCheck, colorOfPlayerMoving);
             return valid;
         }
 
-        bool CheckWhichPieceMoved(ChessPiece cp, ChessMove moveToCheck, ChessColor theirColor)
+        bool CheckWhichPieceMoved(ChessBoard boardBeforeMove, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
         {
+            bool validMove = false;
             if(cp == ChessPiece.BlackPawn || cp == ChessPiece.WhitePawn)
             {
-
+                validMove = CheckPawn(boardBeforeMove, cp, moveToCheck, color);
             }
             else if(cp == ChessPiece.BlackKnight || cp == ChessPiece.WhiteKnight)
             {
-
+                validMove = CheckKnight(boardBeforeMove, cp, moveToCheck, color);
             }
             else if(cp == ChessPiece.BlackBishop || cp == ChessPiece.WhiteBishop)
             {
@@ -89,9 +86,72 @@ namespace StudentAI
             {
 
             }
-            return true;
+            return validMove;
         }
 
+
+        bool CheckPawn(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
+        {
+            int x1 = moveToCheck.From.X;
+            int x2 = moveToCheck.To.X;
+            int y1 = moveToCheck.From.Y;
+            int y2 = moveToCheck.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            if (!(CheckColorAtDest(board, color, x2, y2)))
+                return false;
+
+            if(color == ChessColor.White)
+            {
+                if((d_x == 0 && (d_y == -1 || (d_y == -2 && y1 == 6)) && board[x2,y2] == ChessPiece.Empty) || ((d_x ==1 || d_x == -1) && d_y == -1 && board[x2,y2] != ChessPiece.Empty)) //y1 == 6 = starting pawn position for white. Probably could change to a global.
+                {
+                    return true;
+                }
+                return false;
+            }
+            else
+            {
+                if((d_x == 0 && (d_y == 1 || (d_y == 2 && y1 == 1)) && board[x2,y2] == ChessPiece.Empty) || ((d_x == 1 || d_x == -1) && d_y == -1 && board[x2,y2] != ChessPiece.Empty)) //y1 == 1 = starting pawn position for black. Probably could change to global.
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        bool CheckKnight(ChessBoard board, ChessPiece cp, ChessMove moveToCheck, ChessColor color)
+        {
+            int x1 = moveToCheck.From.X;
+            int x2 = moveToCheck.To.X;
+            int y1 = moveToCheck.From.Y;
+            int y2 = moveToCheck.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+            
+            if(!(CheckColorAtDest(board, color, x2, y2)))
+                return false;
+
+            if ( ((Math.Abs(d_x) == 1 && Math.Abs(d_y) == 2) || (Math.Abs(d_x) == 2 && Math.Abs(d_y) == 1)))
+                return true;
+            return false;
+        }
+
+        //Checks to see if the color at the dest is the same color as the piece moving there.
+        bool CheckColorAtDest(ChessBoard board, ChessColor color, int x2, int y2)
+        {
+            if (color == ChessColor.White)
+            {
+                if (board[x2, y2] > ChessPiece.Empty)
+                    return false;
+            }
+            else
+            {
+                if (board[x2, y2] < ChessPiece.Empty)
+                    return false;
+            }
+            return true;
+        }
         #endregion
 
         // Bryson Murray    Brad Hawkins    Adam Clayton
