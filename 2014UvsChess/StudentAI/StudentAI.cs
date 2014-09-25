@@ -9,6 +9,16 @@ namespace StudentAI
     {
         #region IChessAI Members that are implemented by the Student
 
+        enum Pieces
+        {
+            King = 10,
+            Queen = 9,
+            Rook = 5,
+            Bishop = 3,
+            Knight = 3,
+            Pawn = 1
+        }
+
         /// <summary>
         /// The name of your AI
         /// </summary>
@@ -30,9 +40,8 @@ namespace StudentAI
         /// <returns> Returns the best chess move the player has for the given chess board</returns>
         public ChessMove GetNextMove(ChessBoard board, ChessColor myColor)
         {
-            int i = 1;
-            return new ChessMove(new ChessLocation(1,1), new ChessLocation(1,1));
-            //throw (new NotImplementedException());
+
+            return new ChessMove(new ChessLocation(2,6), new ChessLocation(2,4));
         }
 
         /// <summary>
@@ -44,7 +53,8 @@ namespace StudentAI
         /// <returns>Returns true if the move was valid</returns>
         public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)
         {
-            Console.WriteLine("Move valid");
+            
+            ChessPiece cp = boardBeforeMove[moveToCheck.From];
             return true;
             //throw (new NotImplementedException());
         }
