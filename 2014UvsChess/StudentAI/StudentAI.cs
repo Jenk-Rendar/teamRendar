@@ -53,10 +53,73 @@ namespace StudentAI
         /// <returns>Returns true if the move was valid</returns>
         public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)
         {
-            
+            bool valid = false;
             ChessPiece cp = boardBeforeMove[moveToCheck.From];
+            CheckWhichPieceMoved(cp, moveToCheck, colorOfPlayerMoving);
+            if(cp == ChessPiece.WhitePawn)
+            {
+                Console.WriteLine("Test");
+            }
+            return valid;
+        }
+
+        bool CheckWhichPieceMoved(ChessPiece cp, ChessMove moveToCheck, ChessColor theirColor)
+        {
+            if(theirColor == ChessColor.Black)
+            {
+                if(cp == ChessPiece.BlackPawn)
+                {
+
+                }
+                else if(cp == ChessPiece.BlackKnight)
+                {
+
+                }
+                else if(cp == ChessPiece.BlackBishop)
+                {
+
+                }
+                else if(cp == ChessPiece.BlackRook)
+                {
+
+                }
+                else if(cp == ChessPiece.BlackQueen)
+                {
+
+                }
+                else if(cp == ChessPiece.BlackKing)
+                {
+
+                }
+            }
+            else
+            {
+                if (cp == ChessPiece.WhitePawn)
+                {
+
+                }
+                else if (cp == ChessPiece.WhiteKnight)
+                {
+
+                }
+                else if (cp == ChessPiece.WhiteBishop)
+                {
+
+                }
+                else if (cp == ChessPiece.WhiteRook)
+                {
+
+                }
+                else if (cp == ChessPiece.WhiteQueen)
+                {
+
+                }
+                else if (cp == ChessPiece.WhiteKing)
+                {
+
+                }
+            }
             return true;
-            //throw (new NotImplementedException());
         }
 
         #endregion
