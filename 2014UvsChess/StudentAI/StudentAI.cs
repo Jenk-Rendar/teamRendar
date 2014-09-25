@@ -51,7 +51,7 @@ namespace StudentAI
         /// <param name="moveToCheck">This is the move that needs to be checked to see if it's valid.</param>
         /// <param name="colorOfPlayerMoving">This is the color of the player who's making the move.</param>
         /// <returns>Returns true if the move was valid</returns>
-        public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)
+        public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)  
         {
             bool valid = false;
             ChessPiece cp = boardBeforeMove[moveToCheck.From];
@@ -65,59 +65,29 @@ namespace StudentAI
 
         bool CheckWhichPieceMoved(ChessPiece cp, ChessMove moveToCheck, ChessColor theirColor)
         {
-            if(theirColor == ChessColor.Black)
+            if(cp == ChessPiece.BlackPawn || cp == ChessPiece.WhitePawn)
             {
-                if(cp == ChessPiece.BlackPawn)
-                {
 
-                }
-                else if(cp == ChessPiece.BlackKnight)
-                {
-
-                }
-                else if(cp == ChessPiece.BlackBishop)
-                {
-
-                }
-                else if(cp == ChessPiece.BlackRook)
-                {
-
-                }
-                else if(cp == ChessPiece.BlackQueen)
-                {
-
-                }
-                else if(cp == ChessPiece.BlackKing)
-                {
-
-                }
             }
-            else
+            else if(cp == ChessPiece.BlackKnight || cp == ChessPiece.WhiteKnight)
             {
-                if (cp == ChessPiece.WhitePawn)
-                {
 
-                }
-                else if (cp == ChessPiece.WhiteKnight)
-                {
+            }
+            else if(cp == ChessPiece.BlackBishop || cp == ChessPiece.WhiteBishop)
+            {
 
-                }
-                else if (cp == ChessPiece.WhiteBishop)
-                {
+            }
+            else if(cp == ChessPiece.BlackRook || cp == ChessPiece.WhiteRook)
+            {
 
-                }
-                else if (cp == ChessPiece.WhiteRook)
-                {
+            }
+            else if(cp == ChessPiece.BlackQueen || cp == ChessPiece.WhiteQueen)
+            {
 
-                }
-                else if (cp == ChessPiece.WhiteQueen)
-                {
+            }
+            else if(cp == ChessPiece.BlackKing || cp == ChessPiece.WhiteKing)
+            {
 
-                }
-                else if (cp == ChessPiece.WhiteKing)
-                {
-
-                }
             }
             return true;
         }
