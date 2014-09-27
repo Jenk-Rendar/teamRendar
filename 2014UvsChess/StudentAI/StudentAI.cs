@@ -31,76 +31,11 @@ namespace StudentAI
 #endif
         }
 
-        enum AIChessPieces
-        {
-            Pawn0,
-            Pawn1,
-            Pawn2,
-            Pawn3,
-            Pawn4,
-            Pawn5,
-            Pawn6,
-            Pawn7,
-            Knight0,
-            Knight1,
-            Bishop0,
-            Bishop1,
-            Rook0,
-            Rook1,
-            Queen0,
-            Queen1,
-            Queen2,
-            Queen3,
-            Queen4,
-            Queen5,
-            Queen6,
-            Queen7,
-            King
-        }
-
         ChessColor _ourColor;
 
-        Dictionary<AIChessPieces, ChessLocation> _blackPieces = new Dictionary<AIChessPieces, ChessLocation>();
-        Dictionary<AIChessPieces, ChessLocation> _whitePieces = new Dictionary<AIChessPieces, ChessLocation>();
+        Dictionary<ChessLocation, int> gravity = new Dictionary<ChessLocation, int>();
 
         ChessBoard _currentBoard;
-
-        public StudentAI()
-        {
-            _blackPieces[AIChessPieces.Rook0] = new ChessLocation(0, 0);
-            _blackPieces[AIChessPieces.Knight0] = new ChessLocation(1, 0);
-            _blackPieces[AIChessPieces.Bishop0] = new ChessLocation(2, 0);
-            _blackPieces[AIChessPieces.Queen0] = new ChessLocation(3, 0);
-            _blackPieces[AIChessPieces.King] = new ChessLocation(4, 0);
-            _blackPieces[AIChessPieces.Bishop1] = new ChessLocation(5, 0);
-            _blackPieces[AIChessPieces.Knight1] = new ChessLocation(6, 0);
-            _blackPieces[AIChessPieces.Rook1] = new ChessLocation(7, 0);
-            _blackPieces[AIChessPieces.Pawn0] = new ChessLocation(0, 1);
-            _blackPieces[AIChessPieces.Pawn1] = new ChessLocation(1, 1);
-            _blackPieces[AIChessPieces.Pawn2] = new ChessLocation(2, 1);
-            _blackPieces[AIChessPieces.Pawn3] = new ChessLocation(3, 1);
-            _blackPieces[AIChessPieces.Pawn4] = new ChessLocation(4, 1);
-            _blackPieces[AIChessPieces.Pawn5] = new ChessLocation(5, 1);
-            _blackPieces[AIChessPieces.Pawn6] = new ChessLocation(6, 1);
-            _blackPieces[AIChessPieces.Pawn7] = new ChessLocation(7, 1);
-
-            _whitePieces[AIChessPieces.Rook0] = new ChessLocation(0, 7);
-            _whitePieces[AIChessPieces.Knight0] = new ChessLocation(1, 7);
-            _whitePieces[AIChessPieces.Bishop0] = new ChessLocation(2, 7);
-            _whitePieces[AIChessPieces.Queen0] = new ChessLocation(3, 7);
-            _whitePieces[AIChessPieces.King] = new ChessLocation(4, 7);
-            _whitePieces[AIChessPieces.Bishop1] = new ChessLocation(5, 7);
-            _whitePieces[AIChessPieces.Knight1] = new ChessLocation(6, 7);
-            _whitePieces[AIChessPieces.Rook1] = new ChessLocation(7, 7);
-            _whitePieces[AIChessPieces.Pawn0] = new ChessLocation(0, 6);
-            _whitePieces[AIChessPieces.Pawn1] = new ChessLocation(1, 6);
-            _whitePieces[AIChessPieces.Pawn2] = new ChessLocation(2, 6);
-            _whitePieces[AIChessPieces.Pawn3] = new ChessLocation(3, 6);
-            _whitePieces[AIChessPieces.Pawn4] = new ChessLocation(4, 6);
-            _whitePieces[AIChessPieces.Pawn5] = new ChessLocation(5, 6);
-            _whitePieces[AIChessPieces.Pawn6] = new ChessLocation(6, 6);
-            _whitePieces[AIChessPieces.Pawn7] = new ChessLocation(7, 6);
-        }
 
         /// <summary>
         /// Evaluates the chess board and decided which move to make. This is the main method of the AI.
@@ -112,11 +47,40 @@ namespace StudentAI
         public ChessMove GetNextMove(ChessBoard board, ChessColor myColor)
         {
             _currentBoard = board;
-            if (_ourColor == null)
-            {
-                _ourColor = myColor;
-            }
-            return new ChessMove(new ChessLocation(2,1), new ChessLocation(2,2));
+            _ourColor = myColor;
+            gravity = new Dictionary<ChessLocation, int>();
+            //return new ChessMove(new ChessLocation(2,1), new ChessLocation(2,2));
+        }
+
+        // Could piece be taken on opponents next turn
+        private bool isThreatened(AIChessPieces piece)
+        {
+            
+        }
+
+        // Checks to see if there 
+        private bool isCovered(AIChessPieces piece)
+        {
+
+        }
+
+        // Pieces that the passed piece can capture in its current location
+        private void CurrentlyThreatening(AIChessPieces piece)
+        {
+
+        }
+
+        //// Pieces that the passed piece can capture in the next given move
+        //private void PossibleCaptures(AIChessPieces piece, ChessLocation loc)
+        //{
+
+        //}
+
+        // Takes in the list of moves, and returns the move to take
+        // Also calculates board gravity to determine best move
+        private void Gravity(AIChessPieces piece)
+        {
+
         }
 
         /// <summary>
@@ -130,221 +94,106 @@ namespace StudentAI
         {
             _currentBoard = boardBeforeMove;
             bool valid = false;
-
-            AIChessPieces pieceToMove = ChessPieceEnumConverter(moveToCheck, colorOfPlayerMoving);
-
-            valid = CheckWhichPieceMoved(pieceToMove, colorOfPlayerMoving, moveToCheck.To.X, moveToCheck.To.Y);
-
-            if (colorOfPlayerMoving != _ourColor)
-            {
-                if (colorOfPlayerMoving == ChessColor.White)
-                {
-                    _whitePieces[pieceToMove] = moveToCheck.To;
-                }
-                else
-                {
-                    _blackPieces[pieceToMove] = moveToCheck.To;
-                }
-            }
+            ChessPiece pieceToMove = boardBeforeMove[moveToCheck.From];
+            valid = CheckMove(pieceToMove, colorOfPlayerMoving, moveToCheck);
             
             return valid;
         }
 
-        AIChessPieces ChessPieceEnumConverter(ChessMove move, ChessColor color)
-        {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
-
-            foreach(AIChessPieces piece in Enum.GetValues(typeof(AIChessPieces)))
-            {
-                if(dict.ContainsKey(piece))
-                {
-                    if(dict[piece] == move.From)
-                    {
-                        return piece;
-                    }
-                }
-            }
-
-            return 0;
-        }
-
-        bool CheckWhichPieceMoved(AIChessPieces piece, ChessColor color, int x2, int y2)
+        bool CheckMove(ChessPiece piece, ChessColor color, ChessMove move)
         {
             bool validMove = false;
 
-            string type = Enum.GetName(typeof(AIChessPieces), piece);
+            if (piece == ChessPiece.WhitePawn || piece == ChessPiece.BlackPawn)
+            {
+                validMove = CheckPawn(move, color);
+            }
+            else if (piece == ChessPiece.WhiteKnight || piece == ChessPiece.BlackKnight)
+            {
+                validMove = CheckKnight(move);
+            }
+            else if (piece == ChessPiece.WhiteBishop || piece == ChessPiece.BlackBishop)
+            {
+                validMove = CheckBishop(move);
+            }
+            else if (piece == ChessPiece.WhiteRook || piece == ChessPiece.BlackRook)
+            {
+                validMove = CheckRook(move);
+            }
+            else if (piece == ChessPiece.WhiteQueen || piece == ChessPiece.BlackQueen)
+            {
+                validMove = CheckQueen(move);
+            }
+            else if (piece == ChessPiece.WhiteKing || piece == ChessPiece.BlackKing)
+            {
+                validMove = CheckKing(move);
+            }
 
-            if (type.Contains("Pawn"))
-            {
-                validMove = CheckPawn(piece, color, x2, y2);
-            }
-            else if (type.Contains("Knight"))
-            {
-                validMove = CheckKnight(piece, color, x2, y2);
-            }
-            else if (type.Contains("Bishop"))
-            {
-                validMove = CheckBishop(piece, color, x2, y2);
-            }
-            else if (type.Contains("Rook"))
-            {
-                validMove = CheckRook(piece, color, x2, y2);
-            }
-            else if (type.Contains("Queen"))
-            {
-                validMove = CheckQueen(piece, color, x2, y2);
-            }
-            else if (type.Contains("King"))
-            {
-                validMove = CheckKing(piece, color, x2, y2);
-            }
+            if (!(CheckColorAtDest(color, move)))
+                validMove = false;
+
             return validMove;
         }
 
-        bool CheckQueen(AIChessPieces piece, ChessColor color, int x2, int y2)
+        bool CheckPawn(ChessMove move, ChessColor color)
         {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
+            bool moveable = false;
 
-            int x1 = dict[piece].X;
-            int y1 = dict[piece].Y;
+            int x1 = move.From.X;
+            int y1 = move.From.Y;
+            int x2 = move.To.X;
+            int y2 = move.To.Y;
             int d_x = x2 - x1;
             int d_y = y2 - y1;
 
-            bool movement = true;
-            if (Math.Abs(d_x) == Math.Abs(d_y))
-                movement = CheckBishop(piece, color, x2, y2);
-            else if (d_x == 0 || d_y == 0)
-                movement = CheckRook(piece, color, x2, y2);
-            return movement;
-        }
-
-        bool CheckPawn(AIChessPieces piece, ChessColor color, int x2, int y2)
-        {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
-
-            int x1 = dict[piece].X;
-            int y1 = dict[piece].Y;
-            int d_x = x2 - x1;
-            int d_y = y2 - y1;
-
-            if (!(CheckColorAtDest(color, x2, y2)))
-                return false;
-
+            
             if(color == ChessColor.White)
             {
-                if((d_x == 0 && (d_y == -1 || (d_y == -2 && y1 == 6)) && _currentBoard[x2,y2] == ChessPiece.Empty) || ((d_x ==1 || d_x == -1) && d_y == -1 && _currentBoard[x2,y2] != ChessPiece.Empty)) //y1 == 6 = starting pawn position for white. Probably could change to a global.
+                if((d_x == 0 && (d_y == -1 || (d_y == -2 && y1 == 6)) && _currentBoard[x2,y2] == ChessPiece.Empty) || ((d_x == 1 || d_x == -1) && d_y == -1 && _currentBoard[x2,y2] != ChessPiece.Empty)) //y1 == 6 = starting pawn position for white. Probably could change to a global.
                 {
-                    return true;
+                    moveable = true;
                 }
-                return false;
+                moveable = false;
             }
             else
             {
-                if((d_x == 0 && (d_y == 1 || (d_y == 2 && y1 == 1)) && _currentBoard[x2,y2] == ChessPiece.Empty) || ((d_x == 1 || d_x == -1) && d_y == -1 && _currentBoard[x2,y2] != ChessPiece.Empty)) //y1 == 1 = starting pawn position for black. Probably could change to global.
+                if((d_x == 0 && (d_y == 1 || (d_y == 2 && y1 == 1)) && _currentBoard[x2,y2] == ChessPiece.Empty) || ((d_x == 1 || d_x == -1) && d_y == 1 && _currentBoard[x2,y2] != ChessPiece.Empty)) //y1 == 1 = starting pawn position for black. Probably could change to global.
                 {
-                    return true;
+                    moveable = true;
                 }
-                return false;
+                moveable = false;
             }
-        }
 
-        bool CheckKnight(AIChessPieces piece, ChessColor color, int x2, int y2)
-        {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
-
-            int x1 = dict[piece].X;
-            int y1 = dict[piece].Y;
-            int d_x = x2 - x1;
-            int d_y = y2 - y1;
-            
-            if(!(CheckColorAtDest(color, x2, y2)))
-                return false;
-
-            if ( ((Math.Abs(d_x) == 1 && Math.Abs(d_y) == 2) || (Math.Abs(d_x) == 2 && Math.Abs(d_y) == 1)))
-                return true;
-            return false;
-        }
-
-        bool CheckKing(AIChessPieces piece, ChessColor color, int x2, int y2)
-        {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
-
-            int x1 = dict[piece].X;
-            int y1 = dict[piece].Y;
-            int d_x = x2 - x1;
-            int d_y = y2 - y1;
-
-            if (!(CheckColorAtDest(color, x2, y2)))
-                return false;
-            if (Math.Abs(d_x) <= 1 && Math.Abs(d_y) <= 1)
-                return true;
-            return false;
-        }
-
-        bool CheckRook(AIChessPieces piece, ChessColor color, int x2, int y2)
-        {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
-
-            int x1 = dict[piece].X;
-            int y1 = dict[piece].Y;
-            int d_x = x2 - x1;
-            int d_y = y2 - y1;
-
-            bool moveable = true;
-            if (d_x == 0)
-            {
-                if(d_y > 0)
-                {
-                    for (int i = 1; i < d_y; --i)
-                    {
-                        if (_currentBoard[x1 + i,y1] != ChessPiece.Empty)
-                            moveable = false;
-                    }
-                }
-                else
-                {
-                    for(int i = -1; i > d_y; --i)
-                    {
-                        if (_currentBoard[x1, y1+i] != ChessPiece.Empty)
-                            moveable = false;
-                    }
-                }
-            }
-            else if (d_y == 0)
-            {
-                if(d_x > 0)
-                {
-                    for(int i = 1; i < d_x; ++i)
-                    {
-                        if(_currentBoard[x1,y1+i] != ChessPiece.Empty)
-                        {
-                            moveable = false;
-                        }
-                    }
-                }
-                else
-                {
-                    for(int i = -1; i > d_x; --i)
-                    {
-                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
-                            moveable = false;
-                    }
-                }
-            }
-            else moveable = false;
             return moveable;
         }
 
-        bool CheckBishop(AIChessPieces piece, ChessColor color, int x2, int y2)
+        bool CheckKnight(ChessMove move)
         {
-            Dictionary<AIChessPieces, ChessLocation> dict = color == ChessColor.White ? _whitePieces : _blackPieces;
+            bool moveable = false;
 
-            int x1 = dict[piece].X;
-            int y1 = dict[piece].Y;
+            int x1 = move.From.X;
+            int y1 = move.From.Y;
+            int x2 = move.To.X;
+            int y2 = move.To.Y;
             int d_x = x2 - x1;
             int d_y = y2 - y1;
 
-            bool moveable = true;
+            if ( ((Math.Abs(d_x) == 1 && Math.Abs(d_y) == 2) || (Math.Abs(d_x) == 2 && Math.Abs(d_y) == 1)))
+                moveable = true;
+
+            return moveable;
+        }
+
+        bool CheckBishop(ChessMove move)
+        {
+            int x1 = move.From.X;
+            int y1 = move.From.Y;
+            int x2 = move.To.X;
+            int y2 = move.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool moveable = false;
             if (Math.Abs(d_x) == Math.Abs(d_y))
             {
                 if(d_y > 0)
@@ -387,20 +236,113 @@ namespace StudentAI
                 }
             }
             else moveable = false;
+
+            return moveable;
+        }
+
+        bool CheckRook(ChessMove move)
+        {
+            int x1 = move.From.X;
+            int y1 = move.From.Y;
+            int x2 = move.To.X;
+            int y2 = move.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool moveable = false;
+            if (d_x == 0)
+            {
+                if (d_y > 0)
+                {
+                    for (int i = 1; i < d_y; --i)
+                    {
+                        if (_currentBoard[x1 + i, y1] != ChessPiece.Empty)
+                            moveable = false;
+                    }
+                }
+                else
+                {
+                    for (int i = -1; i > d_y; --i)
+                    {
+                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
+                            moveable = false;
+                    }
+                }
+            }
+            else if (d_y == 0)
+            {
+                if (d_x > 0)
+                {
+                    for (int i = 1; i < d_x; ++i)
+                    {
+                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
+                        {
+                            moveable = false;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = -1; i > d_x; --i)
+                    {
+                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
+                            moveable = false;
+                    }
+                }
+            }
+            else moveable = false;
+
+            return moveable;
+        }
+
+        bool CheckQueen(ChessMove move)
+        {
+            int x1 = move.From.X;
+            int y1 = move.From.Y;
+            int x2 = move.To.X;
+            int y2 = move.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool moveable = true;
+
+            if (Math.Abs(d_x) == Math.Abs(d_y))
+                moveable = CheckBishop(move);
+            else if (d_x == 0 || d_y == 0)
+                moveable = CheckRook(move);
+
+            return moveable;
+        }
+
+        bool CheckKing(ChessMove move)
+        {
+            int x1 = move.From.X;
+            int y1 = move.From.Y;
+            int x2 = move.To.X;
+            int y2 = move.To.Y;
+            int d_x = x2 - x1;
+            int d_y = y2 - y1;
+
+            bool moveable = false;
+
+            if (Math.Abs(d_x) <= 1 && Math.Abs(d_y) <= 1)
+                moveable = true;
+
             return moveable;
         }
 
         //Checks to see if the color at the dest is the same color as the piece moving there.
-        bool CheckColorAtDest(ChessColor color, int x2, int y2)
+        //MAKE CHANGES NECESSARY TO ALLOW DETECTING OF SAME COLOR FOR COVERAGE
+        bool CheckColorAtDest(ChessColor color, ChessMove move)
         {
             if (color == ChessColor.White)
             {
-                if (_currentBoard[x2, y2] > ChessPiece.Empty)
+                if (_currentBoard[move.To] > ChessPiece.Empty)
                     return false;
             }
             else
             {
-                if (_currentBoard[x2, y2] < ChessPiece.Empty)
+                if (_currentBoard[move.To] < ChessPiece.Empty)
                     return false;
             }
             return true;
