@@ -46,3 +46,5 @@
 2014UvsChess/Framework/bin/x86/Debug/UvsChess.exe
 2014UvsChess/Framework/bin/x86/Debug/UvsChess.vshost.exe
 2014UvsChess/Framework/obj/x86/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+*.cache
+*.exe
