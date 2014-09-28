@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UvsChess;
 
@@ -8,16 +9,6 @@ namespace StudentAI
     public class StudentAI : IChessAI
     {
         #region IChessAI Members that are implemented by the Student
-
-        enum PieceValues
-        {
-            King = 10,
-            Queen = 9,
-            Rook = 5,
-            Bishop = 3,
-            Knight = 3,
-            Pawn = 1
-        }
 
         /// <summary>
         /// The name of your AI
@@ -32,10 +23,66 @@ namespace StudentAI
         }
 
         ChessColor _ourColor;
-
-        Dictionary<ChessLocation, int> gravity = new Dictionary<ChessLocation, int>();
-
+        double[,] _gravity;
+        List<ChessMove> _possibleMoves;
         ChessBoard _currentBoard;
+        Dictionary<string, int> _pieceValues = new Dictionary<string, int>()
+        {
+            { "King", 10 },
+            { "Queen", 9 },
+            { "Rook", 5 },
+            { "Bishop", 3 },
+            { "Knight", 3 },
+            { "Pawn", 1 }
+        };
+
+        HashSet<ChessLocation> _kingMoves = new HashSet<ChessLocation>()
+        {
+            {new ChessLocation(-1,-1)},
+            {new ChessLocation(0,-1)},
+            {new ChessLocation(1,-1)},
+            {new ChessLocation(1,0)},
+            {new ChessLocation(1,1)},
+            {new ChessLocation(0,1)},
+            {new ChessLocation(-1,1)},
+            {new ChessLocation(-1,0)}
+        };
+
+        HashSet<ChessLocation> _pawnMoves = new HashSet<ChessLocation>()
+        {
+            {new ChessLocation(1,1)},
+            {new ChessLocation(0,1)},
+            {new ChessLocation(0,2)},
+            {new ChessLocation(-1,1)}
+        };
+
+        HashSet<ChessLocation> _rookMoves = new HashSet<ChessLocation>()
+        {
+            {new ChessLocation(0,-1)},
+            {new ChessLocation(1,0)},
+            {new ChessLocation(0,1)},
+            {new ChessLocation(-1,0)}
+        };
+
+        HashSet<ChessLocation> _bishopMoves = new HashSet<ChessLocation>()
+        {
+            {new ChessLocation(-1,-1)},
+            {new ChessLocation(1,-1)},
+            {new ChessLocation(1,1)},
+            {new ChessLocation(-1,1)},
+        };
+
+        HashSet<ChessLocation> _knightMoves = new HashSet<ChessLocation>()
+        {
+            {new ChessLocation(-2,1)},
+            {new ChessLocation(-1,2)},
+            {new ChessLocation(1,2)},
+            {new ChessLocation(2,1)},
+            {new ChessLocation(2,-1)},
+            {new ChessLocation(1,-2)},
+            {new ChessLocation(-1,-2)},
+            {new ChessLocation(-2,-1)}
+        };
 
         /// <summary>
         /// Evaluates the chess board and decided which move to make. This is the main method of the AI.
@@ -46,42 +93,248 @@ namespace StudentAI
         /// <returns> Returns the best chess move the player has for the given chess board</returns>
         public ChessMove GetNextMove(ChessBoard board, ChessColor myColor)
         {
+            _gravity = new double[8, 8];
+            _possibleMoves = new List<ChessMove>();
             _currentBoard = board;
             _ourColor = myColor;
-            gravity = new Dictionary<ChessLocation, int>();
-            //return new ChessMove(new ChessLocation(2,1), new ChessLocation(2,2));
+            GenerateGravity();
+            return _possibleMoves[0];
         }
 
-        // Could piece be taken on opponents next turn
-        private bool isThreatened(AIChessPieces piece)
+        private void GenerateGravity()
         {
+            for(int y = 0; y < 8; y++)
+            {
+                for(int x = 0; x < 8; x++)
+                {
+                    if (_currentBoard[x,y] != ChessPiece.Empty)
+                    {
+                        bool ours = false;
+                        ChessPiece piece = _currentBoard[x, y];
+                        string pieceType = Enum.GetName(typeof(ChessPiece),piece);
+                        pieceType = pieceType.Remove(0,5);
+
+                        // If the piece is our piece
+                        if (!((piece < ChessPiece.Empty && _ourColor == ChessColor.Black) || (piece > ChessPiece.Empty && _ourColor == ChessColor.White)))
+                        {
+                            ours = true;
+                        }
+
+                        
+
+                        _gravity[x, y] += ours || pieceType == "King" ? 0 : (_pieceValues[pieceType]);
+                        GenerateMoves(piece, pieceType, x, y, ours);
+                    }
+                }
+                this.Log(_gravity[0, y] + " " + _gravity[1, y] + " " + _gravity[2, y] + " " + _gravity[3, y] + " " + _gravity[4, y] + " " + _gravity[5, y] + " " + _gravity[6, y] + " " + _gravity[7, y]);
+            }
+        }
+
+        private void GenerateMoves(ChessPiece piece, string type, int x1, int y1, bool ours)
+        {
+            ChessColor color = piece < ChessPiece.Empty ? ChessColor.Black : ChessColor.White;
+            ChessLocation currentLoc = new ChessLocation(x1, y1);
+
+            if (type == "Pawn")
+            {
+                foreach (ChessLocation loc in _pawnMoves)
+                {
+                    ChessLocation newLoc = new ChessLocation(x1 + loc.X, y1 + color == ChessColor.White ? -(loc.Y) : loc.Y);
+                    if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                        continue;
+
+                    bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                    if (valid)
+                    {
+                        if (ours)
+                        {
+                            if (y1 != newLoc.Y)
+                                _gravity[newLoc.X, newLoc.Y] += 1;
+                            _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                        }
+                        else
+                        {
+                            if (y1 != newLoc.Y)
+                                _gravity[newLoc.X, newLoc.Y] -= 1;
+                        }
+                    }
+                }
+            }
+            else if (type == "Knight")
+            {
+                foreach (ChessLocation loc in _knightMoves)
+                {
+                    ChessLocation newLoc = new ChessLocation(x1 + loc.X, y1 + loc.Y);
+                    if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                        continue;
+
+                    bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                    if (valid)
+                    {
+                        if (ours)
+                        {
+                            _gravity[newLoc.X, newLoc.Y] += 1;
+                            _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                        }
+                        else
+                        {
+                            _gravity[newLoc.X, newLoc.Y] -= 1;
+                        }
+                    }
+                }
+            }
+            else if (type == "King")
+            {
+                foreach (ChessLocation loc in _kingMoves)
+                {
+                    if (ours)
+                    {
+                        ChessLocation newLoc = new ChessLocation(x1 + loc.X, y1 + loc.Y);
+                        if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                            continue;
+
+                        bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                        if (valid)
+                        {
+                            _gravity[newLoc.X, newLoc.Y] += 1;
+                            _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 1; i < 8; i++)
+                        {
+                            ChessLocation newLoc = new ChessLocation(x1 + loc.X * i, y1 + loc.Y * i);
+                            if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                                continue;
+
+                            bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                            if (valid)
+                            {
+                                if (i == 1)
+                                {
+                                    _gravity[newLoc.X, newLoc.Y] -= 1;
+                                }
+                                else
+                                {
+                                    _gravity[newLoc.X, newLoc.Y] += 10;
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            else if (type == "Bishop")
+            {
+                foreach (ChessLocation loc in _bishopMoves)
+                {
+                    for(int i = 1; i < 8; i++)
+                    {
+                        ChessLocation newLoc = new ChessLocation(x1 + loc.X * i, y1 + loc.Y * i);
+                        if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                            continue;
+
+                        bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                        if (valid)
+                        {
+                            if (ours)
+                            {
+                                _gravity[newLoc.X, newLoc.Y] += 1;
+                                _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                            }
+                            else
+                            {
+                                _gravity[newLoc.X, newLoc.Y] -= 1;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (type == "Rook")
+            {
+                foreach (ChessLocation loc in _rookMoves)
+                {
+                    for (int i = 1; i < 8; i++)
+                    {
+                        ChessLocation newLoc = new ChessLocation(x1 + loc.X * i, y1 + loc.Y * i);
+                        if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                            continue;
+
+                        bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                        if (valid)
+                        {
+                            if (ours)
+                            {
+                                _gravity[newLoc.X, newLoc.Y] += 1;
+                                _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                            }
+                            else
+                            {
+                                _gravity[newLoc.X, newLoc.Y] -= 1;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (type == "Queen")
+            {
+                foreach (ChessLocation loc in _kingMoves)
+                {
+                    for (int i = 1; i < 8; i++)
+                    {
+                        ChessLocation newLoc = new ChessLocation(x1 + loc.X * i, y1 + loc.Y * i);
+                        if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
+                            continue;
+
+                        bool valid = CheckMove(piece, color, new ChessMove(currentLoc, newLoc));
+                        if (valid)
+                        {
+                            if (ours)
+                            {
+                                _gravity[newLoc.X, newLoc.Y] += 1;
+                                _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                            }
+                            else
+                            {
+                                _gravity[newLoc.X, newLoc.Y] -= 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //// Could piece be taken on opponents next turn
+        //private bool isThreatened(AIChessPieces piece)
+        //{
             
-        }
+        //}
 
-        // Checks to see if there 
-        private bool isCovered(AIChessPieces piece)
-        {
-
-        }
-
-        // Pieces that the passed piece can capture in its current location
-        private void CurrentlyThreatening(AIChessPieces piece)
-        {
-
-        }
-
-        //// Pieces that the passed piece can capture in the next given move
-        //private void PossibleCaptures(AIChessPieces piece, ChessLocation loc)
+        //// Checks to see if there 
+        //private bool isCovered(AIChessPieces piece)
         //{
 
         //}
 
-        // Takes in the list of moves, and returns the move to take
-        // Also calculates board gravity to determine best move
-        private void Gravity(AIChessPieces piece)
-        {
+        //// Pieces that the passed piece can capture in its current location
+        //private void CurrentlyThreatening(AIChessPieces piece)
+        //{
 
-        }
+        //}
+
+        ////// Pieces that the passed piece can capture in the next given move
+        ////private void PossibleCaptures(AIChessPieces piece, ChessLocation loc)
+        ////{
+
+        ////}
+
+        //// Takes in the list of moves, and returns the move to take
+        //// Also calculates board gravity to determine best move
+        //private void Gravity(AIChessPieces piece)
+        //{
+
+        //}
 
         /// <summary>
         /// Validates a move. The framework uses this to validate the opponents move.
@@ -95,6 +348,8 @@ namespace StudentAI
             _currentBoard = boardBeforeMove;
             bool valid = false;
             ChessPiece pieceToMove = boardBeforeMove[moveToCheck.From];
+
+            
             valid = CheckMove(pieceToMove, colorOfPlayerMoving, moveToCheck);
             
             return valid;
@@ -103,6 +358,9 @@ namespace StudentAI
         bool CheckMove(ChessPiece piece, ChessColor color, ChessMove move)
         {
             bool validMove = false;
+
+            if (move.To.X < 0 || move.To.X > 7 || move.To.Y < 0 || move.To.Y > 7)
+                return false;
 
             if (piece == ChessPiece.WhitePawn || piece == ChessPiece.BlackPawn)
             {
@@ -210,7 +468,7 @@ namespace StudentAI
                     {
                         for(int i = -1; i > d_x; --i)
                         {
-                            if (_currentBoard[x1 - i, y1 + i] != ChessPiece.Empty)
+                            if (_currentBoard[x1 + i, y1 - i] != ChessPiece.Empty)
                                 moveable = false;
                         }
                     }
@@ -254,9 +512,9 @@ namespace StudentAI
             {
                 if (d_y > 0)
                 {
-                    for (int i = 1; i < d_y; --i)
+                    for (int i = 1; i < d_y; ++i)
                     {
-                        if (_currentBoard[x1 + i, y1] != ChessPiece.Empty)
+                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
                             moveable = false;
                     }
                 }
@@ -275,7 +533,7 @@ namespace StudentAI
                 {
                     for (int i = 1; i < d_x; ++i)
                     {
-                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
+                        if (_currentBoard[x1 + i, y1] != ChessPiece.Empty)
                         {
                             moveable = false;
                         }
@@ -285,7 +543,7 @@ namespace StudentAI
                 {
                     for (int i = -1; i > d_x; --i)
                     {
-                        if (_currentBoard[x1, y1 + i] != ChessPiece.Empty)
+                        if (_currentBoard[x1 + i, y1] != ChessPiece.Empty)
                             moveable = false;
                     }
                 }
