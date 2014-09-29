@@ -36,10 +36,10 @@ namespace StudentAI
         double _checkValue = 0.0;
         ChessColor _ourColor, _enemyColor;
         double[,] _gravity;
-        List<ChessMove> _possibleMoves;
+        // List<ChessMove> _possibleMoves;
         ChessBoard _currentBoard;
         HashSet<ChessLocation> _threatenedPieces, _knightCheck, _bishopCheck, _rookCheck;
-        List<FinalMove> _moveQueue;
+        // List<FinalMove> _moveQueue;
         ChessMove _previousMove, _prePreviousMove, _previousCheck, _prePreviousCheck;
 
         Dictionary<string, double> _pieceValues = new Dictionary<string, double>()
@@ -114,50 +114,54 @@ namespace StudentAI
             _ourColor = myColor;
             _enemyColor = _ourColor == ChessColor.White ? ChessColor.Black : ChessColor.White;
             _gravity = new double[8, 8];
-            _possibleMoves = new List<ChessMove>();
+            // _possibleMoves = new List<ChessMove>();
             _threatenedPieces = new HashSet<ChessLocation>();
             _knightCheck = new HashSet<ChessLocation>();
             _bishopCheck = new HashSet<ChessLocation>();
             _rookCheck = new HashSet<ChessLocation>();
-            GenerateGravity();
+
+            List<ChessMove> moves = GenerateGravity();
             printGravity();
+
             bool enemyKingHasMoves = GeneratePossibleKingMoves(_enemyKingLoc, _enemyColor);
-            if(!enemyKingHasMoves || _numEnemyPieces <= 5)
+            if(!enemyKingHasMoves || _numEnemyPieces < 5)
             {
                 _checkValue = 10.0;
             }
 
-            BuildPriorityQueue();
-            while (_previousMove == _moveQueue[0].move || _prePreviousMove == _moveQueue[0].move || (_previousCheck != null && _previousCheck.To == _moveQueue[0].move.From) || (_prePreviousCheck != null && _prePreviousCheck.To == _moveQueue[0].move.From))
+            List<FinalMove> moveQueue = BuildPriorityQueue(moves);
+
+            while (_previousMove == moveQueue[0].move || _prePreviousMove == moveQueue[0].move || (_previousCheck != null && _previousCheck.To == moveQueue[0].move.From) || (_prePreviousCheck != null && _prePreviousCheck.To == moveQueue[0].move.From))
             {
-                _moveQueue.Remove(_moveQueue[0]);
+                moveQueue.Remove(moveQueue[0]);
             }
+
             _prePreviousMove = _previousMove;
-            _previousMove = _moveQueue[0].move;
+            _previousMove = moveQueue[0].move;
 
-            _currentBoard[_moveQueue[0].move.To] = _currentBoard[_moveQueue[0].move.From];
-            _currentBoard[_moveQueue[0].move.From] = ChessPiece.Empty;
+            _currentBoard[moveQueue[0].move.To] = _currentBoard[moveQueue[0].move.From];
+            _currentBoard[moveQueue[0].move.From] = ChessPiece.Empty;
 
-            while(checkForCheck(true))
+            while(checkForCheck(true, _currentBoard))
             {
-                _moveQueue.RemoveAt(0);
-                _currentBoard[_moveQueue[0].move.To] = _currentBoard[_moveQueue[0].move.From];
-                _currentBoard[_moveQueue[0].move.From] = ChessPiece.Empty;
+                moveQueue.RemoveAt(0);
+                _currentBoard[moveQueue[0].move.To] = _currentBoard[moveQueue[0].move.From];
+                _currentBoard[moveQueue[0].move.From] = ChessPiece.Empty;
             }
 
-            if(checkForCheck(false))
+            if(checkForCheck(false, _currentBoard))
             {
                 if (!GeneratePossibleKingMoves(_enemyKingLoc, _enemyColor))
                 {
-                    _moveQueue[0].move.Flag = ChessFlag.Checkmate;
+                    moveQueue[0].move.Flag = ChessFlag.Checkmate;
                 }
                 else
                 {
-                    _moveQueue[0].move.Flag = ChessFlag.Check;
+                    moveQueue[0].move.Flag = ChessFlag.Check;
                 }
                 
                 _prePreviousCheck = _previousCheck;
-                _previousCheck = _moveQueue[0].move;
+                _previousCheck = moveQueue[0].move;
             }
             else
             {
@@ -165,24 +169,24 @@ namespace StudentAI
                 _previousCheck = null;
             }
 
-            if(_currentBoard[_moveQueue[0].move.To] == (_ourColor == ChessColor.White ? ChessPiece.WhitePawn : ChessPiece.BlackPawn))
+            if(_currentBoard[moveQueue[0].move.To] == (_ourColor == ChessColor.White ? ChessPiece.WhitePawn : ChessPiece.BlackPawn))
             {
-                if(_moveQueue[0].move.To.Y == (_ourColor == ChessColor.White ? 0 : 7))
+                if(moveQueue[0].move.To.Y == (_ourColor == ChessColor.White ? 0 : 7))
                 {
-                    _currentBoard[_moveQueue[0].move.To] = (_ourColor == ChessColor.White ? ChessPiece.WhiteQueen : ChessPiece.BlackQueen);
-                    if (checkForCheck(false))
+                    _currentBoard[moveQueue[0].move.To] = (_ourColor == ChessColor.White ? ChessPiece.WhiteQueen : ChessPiece.BlackQueen);
+                    if (checkForCheck(false, _currentBoard))
                     {
                         if (!GeneratePossibleKingMoves(_enemyKingLoc, _enemyColor))
                         {
-                            _moveQueue[0].move.Flag = ChessFlag.Checkmate;
+                            moveQueue[0].move.Flag = ChessFlag.Checkmate;
                         }
                         else
                         {
-                            _moveQueue[0].move.Flag = ChessFlag.Check;
+                            moveQueue[0].move.Flag = ChessFlag.Check;
                         }
 
                         _prePreviousCheck = _previousCheck;
-                        _previousCheck = _moveQueue[0].move;
+                        _previousCheck = moveQueue[0].move;
                     }
                     else
                     {
@@ -194,12 +198,13 @@ namespace StudentAI
 
 
             _checkValue = 0.0;
-            return _moveQueue[0].move;
+            return moveQueue[0].move;
         }
 
-        private void GenerateGravity()
+        private List<ChessMove> GenerateGravity()
         {
             _numEnemyPieces = 0;
+            List<ChessMove> moves = new List<ChessMove>();
             for(int y = 0; y < 8; y++)
             {
                 for(int x = 0; x < 8; x++)
@@ -223,45 +228,58 @@ namespace StudentAI
                         }
 
                         _gravity[x, y] += ours || pieceType == "King" ? 0.0 : (_pieceValues[pieceType]);
-                        GenerateMoves(piece, pieceType, new ChessLocation(x, y), ours);
+
+                        if (moves.Count > 0)
+                        {
+                            moves.InsertRange(moves.Count - 1, GenerateMoves(piece, pieceType, new ChessLocation(x, y), ours));
+                        }
+                        else
+                        {
+                            moves = GenerateMoves(piece, pieceType, new ChessLocation(x, y), ours);
+                        }
                     }
                 }
             }
+
+            return moves;
         }
 
-        private void GenerateMoves(ChessPiece piece, string type, ChessLocation currentLoc, bool ours)
+        private List<ChessMove> GenerateMoves(ChessPiece piece, string type, ChessLocation currentLoc, bool ours)
         {
             ChessColor color = piece < ChessPiece.Empty ? ChessColor.Black : ChessColor.White;
+            List<ChessMove> moves = null;
 
             if (type == "Pawn")
             {
-                GeneratePawnMoves(piece, ours, color, currentLoc);
+                moves = GeneratePawnMoves(piece, ours, color, currentLoc);
             }
             else if (type == "Knight")
             {
-                GenerateKnightMoves(piece, ours, color, currentLoc);
+                moves = GenerateKnightMoves(piece, ours, color, currentLoc);
             }
             else if (type == "Bishop")
             {
-                GenerateBishopMoves(piece, ours, color, currentLoc);
+                moves = GenerateBishopMoves(piece, ours, color, currentLoc);
             }
             else if (type == "Rook")
             {
-                GenerateRookMoves(piece, ours, color, currentLoc);
+                moves = GenerateRookMoves(piece, ours, color, currentLoc);
             }
             else if (type == "Queen")
             {
-                GenerateQueenMoves(piece, ours, color, currentLoc);
+                moves = GenerateQueenMoves(piece, ours, color, currentLoc);
             }
             else if (type == "King")
             {
-                GenerateKingMoves(piece, ours, color, currentLoc);
+                moves = GenerateKingMoves(piece, ours, color, currentLoc);
             }
+
+            return moves;
         }
 
-        private void GeneratePawnMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
+        private List<ChessMove> GeneratePawnMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
         {
-
+            List<ChessMove> moves = new List<ChessMove>();
             foreach (ChessLocation loc in _pawnMoves)
             {
                 ChessLocation newLoc = new ChessLocation(currentLoc.X + loc.X, color == ChessColor.White ? currentLoc.Y - loc.Y : currentLoc.Y + loc.Y);
@@ -285,7 +303,7 @@ namespace StudentAI
                 {
                     if (ours)
                     {
-                        _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                        moves.Add(new ChessMove(currentLoc, newLoc));
                     }
                     else
                     {
@@ -293,10 +311,13 @@ namespace StudentAI
                     }
                 }
             }
+
+            return moves;
         }
 
-        private void GenerateKnightMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
+        private List<ChessMove> GenerateKnightMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
         {
+            List<ChessMove> moves = new List<ChessMove>();
             foreach (ChessLocation loc in _knightMoves)
             {
                 ChessLocation newLoc = new ChessLocation(currentLoc.X + loc.X, currentLoc.Y + loc.Y);
@@ -309,7 +330,7 @@ namespace StudentAI
                     if (ours)
                     {
                         _gravity[newLoc.X, newLoc.Y] += _coverageValue;
-                        _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                        moves.Add(new ChessMove(currentLoc, newLoc));
                     }
                     else
                     {
@@ -318,10 +339,13 @@ namespace StudentAI
                     }
                 }
             }
+
+            return moves;
         }
 
-        private void GenerateBishopMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
+        private List<ChessMove> GenerateBishopMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
         {
+            List<ChessMove> moves = new List<ChessMove>();
             foreach (ChessLocation loc in _bishopMoves)
             {
                 for (int i = 1; i < 8; i++)
@@ -336,7 +360,7 @@ namespace StudentAI
                         if (ours)
                         {
                             _gravity[newLoc.X, newLoc.Y] += _coverageValue;
-                            _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                            moves.Add(new ChessMove(currentLoc, newLoc));
                         }
                         else
                         {
@@ -346,10 +370,13 @@ namespace StudentAI
                     }
                 }
             }
+
+            return moves;
         }
 
-        private void GenerateRookMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
+        private List<ChessMove> GenerateRookMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
         {
+            List<ChessMove> moves = new List<ChessMove>();
             foreach (ChessLocation loc in _rookMoves)
             {
                 for (int i = 1; i < 8; i++)
@@ -364,7 +391,7 @@ namespace StudentAI
                         if (ours)
                         {
                             _gravity[newLoc.X, newLoc.Y] += _coverageValue;
-                            _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                            moves.Add(new ChessMove(currentLoc, newLoc));
                         }
                         else
                         {
@@ -374,10 +401,13 @@ namespace StudentAI
                     }
                 }
             }
+
+            return moves;
         }
 
-        private void GenerateQueenMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
+        private List<ChessMove> GenerateQueenMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
         {
+            List<ChessMove> moves = new List<ChessMove>();
             foreach (ChessLocation loc in _kingMoves)
             {
                 for (int i = 1; i < 8; i++)
@@ -392,7 +422,7 @@ namespace StudentAI
                         if (ours)
                         {
                             _gravity[newLoc.X, newLoc.Y] += _coverageValue;
-                            _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                            moves.Add(new ChessMove(currentLoc, newLoc));
                         }
                         else
                         {
@@ -402,10 +432,13 @@ namespace StudentAI
                     }
                 }
             }
+
+            return moves;
         }
 
-        private void GenerateKingMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
+        private List<ChessMove> GenerateKingMoves(ChessPiece piece, bool ours, ChessColor color, ChessLocation currentLoc)
         {
+            List<ChessMove> moves = new List<ChessMove>();
             foreach (ChessLocation loc in _kingMoves)
             {
                 if (ours)
@@ -419,7 +452,7 @@ namespace StudentAI
                     if (valid)
                     {
                         _gravity[newLoc.X, newLoc.Y] += _coverageValue;
-                        _possibleMoves.Add(new ChessMove(currentLoc, newLoc));
+                        moves.Add(new ChessMove(currentLoc, newLoc));
                     }
                 }
                 else
@@ -473,6 +506,8 @@ namespace StudentAI
                     }
                 }
             }
+
+            return moves;
         }
 
         private void printGravity()
@@ -507,11 +542,11 @@ namespace StudentAI
             return false;
         }
 
-        private void BuildPriorityQueue()
+        private List<FinalMove> BuildPriorityQueue(List<ChessMove> moves)
         {
-            _moveQueue = new List<FinalMove>();
+            List<FinalMove> moveQueue = new List<FinalMove>();
 
-            foreach(ChessMove p_move in _possibleMoves)
+            foreach(ChessMove p_move in moves)
             {
                 double calc_val = 0;
                 if (_threatenedPieces.Contains(p_move.From))
@@ -543,25 +578,27 @@ namespace StudentAI
 
                 calc_val += _gravity[p_move.To.X, p_move.To.Y];
 
-                if (_moveQueue.Count > 0)
+                if (moveQueue.Count > 0)
                 {
                     int i = 0;
-                    while(i < _moveQueue.Count && calc_val <= _moveQueue[i].value)
+                    while(i < moveQueue.Count && calc_val <= moveQueue[i].value)
                         i++;
-                    _moveQueue.Insert(i, new FinalMove { move = p_move, value = calc_val });
+                    moveQueue.Insert(i, new FinalMove { move = p_move, value = calc_val });
                 }
                 else
                 {
-                    _moveQueue.Add(new FinalMove { move = p_move, value = calc_val });
+                    moveQueue.Add(new FinalMove { move = p_move, value = calc_val });
                 }
             }
+
+            return moveQueue;
         }
 
-        private bool checkForCheck(bool ours)
+        private bool checkForCheck(bool ours, ChessBoard board)
         {
             ChessLocation kingLoc;
             ChessColor color;
-             
+            List<ChessMove> moves = null;
 
             if (ours)
             {
@@ -580,14 +617,14 @@ namespace StudentAI
                 {
                     if (kingLoc.X > 0)
                     {
-                        if (_currentBoard[kingLoc.X - 1, kingLoc.Y - 1] == ChessPiece.BlackPawn)
+                        if (board[kingLoc.X - 1, kingLoc.Y - 1] == ChessPiece.BlackPawn)
                         {
                             return true;
                         }
                     }
                     if (kingLoc.X < 7)
                     {
-                        if (_currentBoard[kingLoc.X + 1, kingLoc.Y - 1] == ChessPiece.BlackPawn)
+                        if (board[kingLoc.X + 1, kingLoc.Y - 1] == ChessPiece.BlackPawn)
                         {
                             return true;
                         }
@@ -600,14 +637,14 @@ namespace StudentAI
                 {
                     if (kingLoc.X > 0)
                     {
-                        if (_currentBoard[kingLoc.X - 1, kingLoc.Y + 1] == ChessPiece.WhitePawn)
+                        if (board[kingLoc.X - 1, kingLoc.Y + 1] == ChessPiece.WhitePawn)
                         {
                             return true;
                         }
                     }
                     if (kingLoc.X < 7)
                     {
-                        if (_currentBoard[kingLoc.X + 1, kingLoc.Y + 1] == ChessPiece.WhitePawn)
+                        if (board[kingLoc.X + 1, kingLoc.Y + 1] == ChessPiece.WhitePawn)
                         {
                             return true;
                         }
@@ -615,46 +652,43 @@ namespace StudentAI
                 }
             }
 
-            _possibleMoves = new List<ChessMove>();
-            GenerateKnightMoves(color == ChessColor.White ? ChessPiece.WhiteKnight : ChessPiece.BlackKnight, !ours, color, kingLoc);
-            foreach(ChessMove p_move in _possibleMoves)
+            moves = GenerateKnightMoves(color == ChessColor.White ? ChessPiece.WhiteKnight : ChessPiece.BlackKnight, !ours, color, kingLoc);
+            foreach(ChessMove p_move in moves)
             {
                 //int x1 = p_move.From.X;
                 //int y1 = p_move.From.Y;
                 //int x2 = p_move.To.X;
                 //int y2 = p_move.To.Y;
                 //this.Log(String.Format("Knight Check Call: From ({0},{1}) To ({2},{3}", x1, y1, x2, y2));
-                if (_currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackKnight : ChessPiece.WhiteKnight))
+                if (board[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackKnight : ChessPiece.WhiteKnight))
                 {
                     return true;
                 }
             }
 
-            _possibleMoves = new List<ChessMove>();
-            GenerateBishopMoves(color == ChessColor.White ? ChessPiece.WhiteBishop : ChessPiece.BlackBishop, !ours, color, kingLoc);
-            foreach (ChessMove p_move in _possibleMoves)
+            moves = GenerateBishopMoves(color == ChessColor.White ? ChessPiece.WhiteBishop : ChessPiece.BlackBishop, !ours, color, kingLoc);
+            foreach (ChessMove p_move in moves)
             {
                 //int x1 = p_move.From.X;
                 //int y1 = p_move.From.Y;
                 //int x2 = p_move.To.X;
                 //int y2 = p_move.To.Y;
                 //this.Log(String.Format("Bishop Check Call: From ({0},{1}) To ({2},{3}",x1,y1,x2,y2));
-                if (_currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackBishop : ChessPiece.WhiteBishop) || _currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackQueen : ChessPiece.WhiteQueen))
+                if (board[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackBishop : ChessPiece.WhiteBishop) || board[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackQueen : ChessPiece.WhiteQueen))
                 {
                     return true;
                 }
             }
             
-            _possibleMoves = new List<ChessMove>();
-            GenerateRookMoves(color == ChessColor.White ? ChessPiece.WhiteRook : ChessPiece.BlackRook, !ours, color, kingLoc);
-            foreach (ChessMove p_move in _possibleMoves)
+            moves = GenerateRookMoves(color == ChessColor.White ? ChessPiece.WhiteRook : ChessPiece.BlackRook, !ours, color, kingLoc);
+            foreach (ChessMove p_move in moves)
             {
                 //int x1 = p_move.From.X;
                 //int y1 = p_move.From.Y;
                 //int x2 = p_move.To.X;
                 //int y2 = p_move.To.Y;
                 //this.Log(String.Format("Rook Check Call: From ({0},{1}) To ({2},{3}", x1, y1, x2, y2));
-                if (_currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackRook : ChessPiece.WhiteRook) || _currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackQueen : ChessPiece.WhiteQueen))
+                if (board[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackRook : ChessPiece.WhiteRook) || board[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackQueen : ChessPiece.WhiteQueen))
                 {
                     return true;
                 }
@@ -698,20 +732,6 @@ namespace StudentAI
         public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)  
         {
             bool valid = false;
-            if (colorOfPlayerMoving != _ourColor)
-            {
-                if (checkForCheck(true) && moveToCheck.Flag != ChessFlag.Check && moveToCheck.Flag != ChessFlag.Checkmate)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (checkForCheck(false) && moveToCheck.Flag != ChessFlag.Check && moveToCheck.Flag != ChessFlag.Checkmate)
-                {
-                    return false;
-                }
-            }
             _currentBoard = boardBeforeMove;
             
             ChessPiece pieceToMove = boardBeforeMove[moveToCheck.From];
@@ -951,10 +971,18 @@ namespace StudentAI
             {
                 ChessPiece piece = _currentBoard[move.From];
                 ChessColor color = piece == ChessPiece.WhiteKing ? ChessColor.White : ChessColor.Black;
-
-                if(!checkForCheck(color == _ourColor))
+                
+                ChessBoard tempBoard = _currentBoard;
+                tempBoard[move.To] = tempBoard[move.From];
+                tempBoard[move.From] = ChessPiece.Empty;
+                
+                if(!checkForCheck(color == _ourColor,tempBoard))
                 {
                     moveable = true;
+                }
+                else
+                {
+                    moveable = false;
                 }
             }
             
