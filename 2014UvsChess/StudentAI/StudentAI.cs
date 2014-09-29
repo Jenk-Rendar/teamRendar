@@ -16,9 +16,9 @@ namespace StudentAI
         public string Name
         {
 #if DEBUG
-            get { return "StudentAI (Debug)"; }
+            get { return "Team RENDAR (Debug)"; }
 #else
-            get { return "StudentAI"; }
+            get { return "Team RENDAR"; }
 #endif
         }
 
@@ -31,7 +31,7 @@ namespace StudentAI
         int _turnsTaken;
         ChessLocation _ourKingLoc;
         ChessLocation _enemyKingLoc;
-        double _coverageValue = 0.5;
+        double _coverageValue = 0.0;
         double _threatValue = 1.5;
         double _checkValue = 7.0;
         ChessColor _ourColor;
@@ -135,7 +135,17 @@ namespace StudentAI
             _prePreviousMove = _previousMove;
             _previousMove = _moveQueue[0].move;
 
-            if (checkForCheck(false))
+            _currentBoard[_moveQueue[0].move.To] = _currentBoard[_moveQueue[0].move.From];
+            _currentBoard[_moveQueue[0].move.From] = ChessPiece.Empty;
+
+            while(checkForCheck(true))
+            {
+                _moveQueue.RemoveAt(0);
+                _currentBoard[_moveQueue[0].move.To] = _currentBoard[_moveQueue[0].move.From];
+                _currentBoard[_moveQueue[0].move.From] = ChessPiece.Empty;
+            }
+
+            if(checkForCheck(false))
             {
                 _moveQueue[0].move.Flag = ChessFlag.Check;
             }
@@ -553,6 +563,11 @@ namespace StudentAI
             GenerateKnightMoves(color == ChessColor.White ? ChessPiece.WhiteKnight : ChessPiece.BlackKnight, !ours, color, kingLoc);
             foreach(ChessMove p_move in _possibleMoves)
             {
+                int x1 = p_move.From.X;
+                int y1 = p_move.From.Y;
+                int x2 = p_move.To.X;
+                int y2 = p_move.To.Y;
+                this.Log(String.Format("Knight Check Call: From ({0},{1}) To ({2},{3}", x1, y1, x2, y2));
                 if (_currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackKnight : ChessPiece.WhiteKnight))
                 {
                     return true;
@@ -563,6 +578,11 @@ namespace StudentAI
             GenerateBishopMoves(color == ChessColor.White ? ChessPiece.WhiteBishop : ChessPiece.BlackBishop, !ours, color, kingLoc);
             foreach (ChessMove p_move in _possibleMoves)
             {
+                int x1 = p_move.From.X;
+                int y1 = p_move.From.Y;
+                int x2 = p_move.To.X;
+                int y2 = p_move.To.Y;
+                this.Log(String.Format("Bishop Check Call: From ({0},{1}) To ({2},{3}",x1,y1,x2,y2));
                 if (_currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackBishop : ChessPiece.WhiteBishop) || _currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackQueen : ChessPiece.WhiteQueen))
                 {
                     return true;
@@ -570,9 +590,14 @@ namespace StudentAI
             }
 
             _possibleMoves = new List<ChessMove>();
-            GenerateBishopMoves(color == ChessColor.White ? ChessPiece.WhiteRook : ChessPiece.BlackRook, !ours, color, kingLoc);
+            GenerateRookMoves(color == ChessColor.White ? ChessPiece.WhiteRook : ChessPiece.BlackRook, !ours, color, kingLoc);
             foreach (ChessMove p_move in _possibleMoves)
             {
+                int x1 = p_move.From.X;
+                int y1 = p_move.From.Y;
+                int x2 = p_move.To.X;
+                int y2 = p_move.To.Y;
+                this.Log(String.Format("Rook Check Call: From ({0},{1}) To ({2},{3}", x1, y1, x2, y2));
                 if (_currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackRook : ChessPiece.WhiteRook) || _currentBoard[p_move.To] == (color == ChessColor.White ? ChessPiece.BlackQueen : ChessPiece.WhiteQueen))
                 {
                     return true;
@@ -592,7 +617,7 @@ namespace StudentAI
         public bool IsValidMove(ChessBoard boardBeforeMove, ChessMove moveToCheck, ChessColor colorOfPlayerMoving)  
         {
             bool valid = false;
-            if (colorOfPlayerMoving == _ourColor)
+            if (colorOfPlayerMoving != _ourColor)
             {
                 if (checkForCheck(true) && moveToCheck.Flag != ChessFlag.Check && moveToCheck.Flag != ChessFlag.Checkmate)
                 {
