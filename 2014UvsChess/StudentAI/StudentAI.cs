@@ -139,17 +139,19 @@ namespace StudentAI
             _prePreviousMove = _previousMove;
             _previousMove = moveQueue[0].move;
 
-            _currentBoard[moveQueue[0].move.To] = _currentBoard[moveQueue[0].move.From];
-            _currentBoard[moveQueue[0].move.From] = ChessPiece.Empty;
 
-            while(checkForCheck(true, _currentBoard))
+            ChessBoard tempBoard = _currentBoard.Clone();
+            tempBoard[moveQueue[0].move.To] = _currentBoard[moveQueue[0].move.From];
+            tempBoard[moveQueue[0].move.From] = ChessPiece.Empty;
+
+            while(checkForCheck(true, tempBoard))
             {
                 moveQueue.RemoveAt(0);
-                _currentBoard[moveQueue[0].move.To] = _currentBoard[moveQueue[0].move.From];
-                _currentBoard[moveQueue[0].move.From] = ChessPiece.Empty;
+                tempBoard[moveQueue[0].move.To] = tempBoard[moveQueue[0].move.From];
+                tempBoard[moveQueue[0].move.From] = ChessPiece.Empty;
             }
 
-            if(checkForCheck(false, _currentBoard))
+            if(checkForCheck(false, tempBoard))
             {
                 if (!GeneratePossibleKingMoves(_enemyKingLoc, _enemyColor))
                 {
@@ -169,12 +171,12 @@ namespace StudentAI
                 _previousCheck = null;
             }
 
-            if(_currentBoard[moveQueue[0].move.To] == (_ourColor == ChessColor.White ? ChessPiece.WhitePawn : ChessPiece.BlackPawn))
+            if(tempBoard[moveQueue[0].move.To] == (_ourColor == ChessColor.White ? ChessPiece.WhitePawn : ChessPiece.BlackPawn))
             {
                 if(moveQueue[0].move.To.Y == (_ourColor == ChessColor.White ? 0 : 7))
                 {
-                    _currentBoard[moveQueue[0].move.To] = (_ourColor == ChessColor.White ? ChessPiece.WhiteQueen : ChessPiece.BlackQueen);
-                    if (checkForCheck(false, _currentBoard))
+                    tempBoard[moveQueue[0].move.To] = (_ourColor == ChessColor.White ? ChessPiece.WhiteQueen : ChessPiece.BlackQueen);
+                    if (checkForCheck(false, tempBoard))
                     {
                         if (!GeneratePossibleKingMoves(_enemyKingLoc, _enemyColor))
                         {
@@ -972,7 +974,7 @@ namespace StudentAI
                 ChessPiece piece = _currentBoard[move.From];
                 ChessColor color = piece == ChessPiece.WhiteKing ? ChessColor.White : ChessColor.Black;
                 
-                ChessBoard tempBoard = _currentBoard;
+                ChessBoard tempBoard = _currentBoard.Clone();
                 tempBoard[move.To] = tempBoard[move.From];
                 tempBoard[move.From] = ChessPiece.Empty;
                 
@@ -1006,6 +1008,8 @@ namespace StudentAI
             return true;
         }
         #endregion
+
+
 
         // Bryson Murray    Brad Hawkins    Adam Clayton
 
