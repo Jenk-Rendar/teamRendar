@@ -565,6 +565,8 @@ namespace StudentAI
                                     int xLoc = x + xDir * i;
                                     int yLoc = y + yDir * i;
 
+                                    this.Log("(" + xLoc + ", " + yLoc + ")");
+                                        
                                     ChessLocation blockLoc = new ChessLocation(xLoc, yLoc);
                                     for (int y2 = 0; y2 < 8; y2++)
                                     {
@@ -574,6 +576,9 @@ namespace StudentAI
 
                                             if (blockPiece != ChessPiece.Empty)
                                             {
+                                                //prints name of piece
+                                                this.Log(Enum.GetName(typeof(ChessPiece),blockPiece));
+
                                                 ChessLocation blockPieceLoc = new ChessLocation(x2, y2);
                                                 ChessMove blockMove = new ChessMove(blockPieceLoc, blockLoc);
                                                 if (IsValidMove(board, blockMove, color))
@@ -949,8 +954,31 @@ namespace StudentAI
             {
                 moveable = false;
             }
-            
+
+            List<ChessLocation> overlapingKingMoves = areKingsTooClose();
+            if (overlapingKingMoves.Contains(move.To))
+            {
+                moveable = false;
+            }
+
             return moveable;
+        }
+        private List<ChessLocation> areKingsTooClose()
+        {
+            List<ChessLocation> ourKingMoves = new List<ChessLocation>();
+            List<ChessLocation> enemyKingMoves = new List<ChessLocation>();
+            foreach(ChessLocation kingmove in _kingMoves){
+                ourKingMoves.Add(new ChessLocation(_ourKingLoc.X + kingmove.X,_ourKingLoc.Y + kingmove.Y));
+                enemyKingMoves.Add(new ChessLocation(_enemyKingLoc.X + kingmove.X,_enemyKingLoc.Y + kingmove.Y));
+            }
+            List<ChessLocation> badMoves = new List<ChessLocation>();
+
+            foreach(ChessLocation kingmove in ourKingMoves){
+                if(enemyKingMoves.Contains(kingmove)){
+                    badMoves.Add(kingmove);
+                }
+            }
+            return badMoves;
         }
 
         //Checks to see if the color at the dest is the same color as the piece moving there.
