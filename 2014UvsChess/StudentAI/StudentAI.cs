@@ -340,6 +340,11 @@ namespace StudentAI
                 valid = false;
             }
 
+            if (_ourColor == color && ((_previousCheck != null && _previousCheck.To == move.From) || (_prePreviousCheck != null && _prePreviousCheck.To == move.From)))
+            {
+                valid = false;
+            }
+
             if (valid)
             {
                 val += CalculateBoardState(tempBoard, color);

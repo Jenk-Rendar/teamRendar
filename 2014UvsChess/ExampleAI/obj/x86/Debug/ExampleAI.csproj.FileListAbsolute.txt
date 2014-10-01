@@ -1,0 +1,7 @@
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\bin\x86\Debug\ExampleAI.dll
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\bin\x86\Debug\ExampleAI.pdb
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\bin\x86\Debug\UvsChess.exe
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\bin\x86\Debug\UvsChess.pdb
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\obj\x86\Debug\ExampleAI.csprojResolveAssemblyReference.cache
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\obj\x86\Debug\ExampleAI.dll
+C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\ExampleAI\obj\x86\Debug\ExampleAI.pdb
