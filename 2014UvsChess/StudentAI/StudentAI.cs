@@ -517,33 +517,49 @@ namespace StudentAI
                             {
                                 if(board[pieceLoc] != ChessPiece.WhiteKnight && board[pieceLoc] != ChessPiece.BlackKnight)
                                 {
-                                    int d_x = move.To.X - move.From.X;
-                                    int d_y = move.To.Y - move.From.Y;
+                                    int d_x = currentLoc.X - pieceLoc.X;
+                                    int d_y = currentLoc.Y - pieceLoc.Y;
 
-                                    for (int yLoc = 0; yLoc < d_x + 1; yLoc++)
+                                    int xDir = 0;
+
+                                    if (d_x != 0)
                                     {
-                                        for (int xLoc = 0; xLoc < d_x + 1; xLoc++)
+                                        xDir = d_x < 0 ? -1 : 1;
+                                    }
+
+                                    int yDir = 0;
+
+                                    if (d_y != 0)
+                                    {
+                                        yDir = d_y < 0 ? -1 : 1;
+                                    }
+
+                                    int dist = d_x > d_y ? Math.Abs(d_x) : Math.Abs(d_y);
+
+                                    for(int i = 1; i <= dist; i++)
+                                    {
+                                        int xLoc = x + xDir * i;
+                                        int yLoc = x + yDir * i;
+
+                                        if (xLoc == 0 && yLoc == 0)
+                                            continue;
+
+                                        ChessLocation blockLoc = new ChessLocation(xLoc, yLoc);
+                                        for (int y2 = 0; y2 < 8; y2++)
                                         {
-                                            if (xLoc == 0 && yLoc == 0)
-                                                continue;
-
-                                            ChessLocation blockLoc = new ChessLocation(x + xLoc, y + yLoc);
-                                            for (int y2 = 0; y2 < 8; y2++)
+                                            for (int x2 = 0; x2 < 8; x2++)
                                             {
-                                                for (int x2 = 0; x2 < 8; x2++)
+                                                ChessLocation blockPieceLoc = new ChessLocation(x2, y2);
+                                                ChessMove blockMove = new ChessMove(blockPieceLoc, blockLoc);
+                                                if (IsValidMove(board, blockMove, color))
                                                 {
-                                                    ChessLocation blockPieceLoc = new ChessLocation(x2, y2);
-                                                    ChessMove blockMove = new ChessMove(blockPieceLoc, blockLoc);
-                                                    if (IsValidMove(board, blockMove, color))
-                                                    {
-                                                        ChessBoard tempBoard = board.Clone();
-                                                        tempBoard[blockMove.To] = tempBoard[blockMove.From];
-                                                        tempBoard[blockMove.From] = ChessPiece.Empty;
+                                                    ChessBoard tempBoard = board.Clone();
+                                                    tempBoard[blockMove.To] = tempBoard[blockMove.From];
+                                                    tempBoard[blockMove.From] = ChessPiece.Empty;
 
-                                                        if (!(PieceThreatened(tempBoard, currentLoc, color) > 0))
-                                                        {
-                                                            moves.Add(move);
-                                                        }
+                                                    if (!(PieceThreatened(tempBoard, currentLoc, color) > 0))
+                                                    {
+                                                        moves.Add(move);
                                                     }
                                                 }
                                             }
