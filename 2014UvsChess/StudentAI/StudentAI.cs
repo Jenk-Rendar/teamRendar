@@ -153,7 +153,7 @@ namespace StudentAI
             }
 
             // Checks if their king is threatened after our move
-            if (PieceThreatened(tempBoard,_enemyKingLoc,_enemyColor))
+            if (PieceThreatened(tempBoard,_enemyKingLoc,_enemyColor) > 0)
             {
                 if (!CanKingSurvive(tempBoard,_enemyKingLoc,_enemyColor))
                 {
@@ -229,13 +229,6 @@ namespace StudentAI
                 return null;
             }
 
-            bool ourKingThreatened = false;
-
-            if (PieceThreatened(board,_ourKingLoc,color))
-            {
-                ourKingThreatened = true;
-            }
-
             List<CalcMove> moves = new List<CalcMove>();
             double[,] boardState = new double[8,8];
 
@@ -261,145 +254,22 @@ namespace StudentAI
 
                             foreach (ChessLocation loc in moveSet)
                             {
-                                ChessLocation newLoc = null;
-
                                 if (_slowPieces.Contains(piece))
                                 {
-                                    int val = 0;
-                                    int sum_x = currentLoc.X + loc.X;
-                                    int sum_y = piece == ChessPiece.WhitePawn ? currentLoc.Y - loc.Y : currentLoc.Y + loc.Y;
-
-                                    newLoc = new ChessLocation(sum_x, sum_y);
-                                        
-                                    if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
-                                        continue;
-
-                                    ChessMove move = new ChessMove(currentLoc, newLoc);
-                                    bool valid = IsValidMove(board, move, color);
-
-                                    ChessBoard tempBoard = board.Clone();
-                                    tempBoard[move.To] = tempBoard[move.From];
-                                    tempBoard[move.From] = ChessPiece.Empty;
-
-                                    if ((piece == ChessPiece.WhitePawn && move.To.Y == 0) || (piece == ChessPiece.BlackPawn && move.To.Y == 7))
+                                    CalcMove posMove = GetPieceMove(board, currentLoc, loc, color, 1);
+                                    if(posMove != null)
                                     {
-                                        tempBoard[move.To] = color == ChessColor.White ? ChessPiece.WhiteQueen : ChessPiece.BlackQueen;
-                                    }
-
-                                    bool threatened = PieceThreatened(tempBoard, newLoc, color);
-
-                                    if ((piece == ChessPiece.WhiteKing || piece == ChessPiece.BlackKing) && threatened)
-                                    {
-                                        valid = false;
-                                    }
-
-                                    if (PieceThreatened(tempBoard, _ourKingLoc, color))
-                                    {
-                                        valid = false;
-                                    }
-
-                                    if (valid)
-                                    {
-                                        val += CalculateBoardState(tempBoard, color);
-                                        //if (depth > 0)
-                                        //{
-                                        //    List<CalcMove> nextMoves = GenerateMoves(tempBoard, color, --depth);
-                                        //    if (nextMoves != null)
-                                        //    {
-                                        //        int maxIndex = CalculateMaxValue(nextMoves);
-                                        //        val = nextMoves[maxIndex].value;
-                                        //    }
-                                        //}
-
-                                        if (ourKingThreatened)
-                                        {
-                                            if (!PieceThreatened(tempBoard,_ourKingLoc,color))
-                                            {
-                                                val += 1000000;
-                                                this.Log("Piece can get king out of check, val = " + val);
-                                            }
-                                        }
-
-                                        if(board[newLoc] != ChessPiece.Empty)
-                                        {
-                                            val += GetPieceValue(board[newLoc]);
-                                        }
-
-                                        if (threatened)
-                                        {
-                                            val -= GetPieceValue(piece) * 2;
-                                        }
-
-                                        CalcMove moveToAdd = new CalcMove();
-                                        moveToAdd.move = move;
-                                        moveToAdd.value = val;
-
-                                        moves.Add(moveToAdd);
-                                        this.Log(moveToAdd.move.ToString() + ", value = " + moveToAdd.value);
+                                        moves.Add(posMove);
                                     }
                                 }
                                 else
                                 {
                                     for (int i = 1; i < 8; i++)
                                     {
-                                        int val = 0;
-                                        newLoc = new ChessLocation(currentLoc.X + loc.X * i, currentLoc.Y + loc.Y * i);
-
-                                        if (newLoc.X < 0 || newLoc.X > 7 || newLoc.Y < 0 || newLoc.Y > 7)
-                                            continue;
-
-                                        ChessMove move = new ChessMove(currentLoc, newLoc);
-                                        bool valid = IsValidMove(board, move, color);
-
-                                        ChessBoard tempBoard = board.Clone();
-                                        tempBoard[move.To] = tempBoard[move.From];
-                                        tempBoard[move.From] = ChessPiece.Empty;
-
-                                        bool threatened = PieceThreatened(tempBoard, newLoc, color);
-
-                                        if (PieceThreatened(tempBoard, _ourKingLoc, color))
+                                        CalcMove posMove = GetPieceMove(board, currentLoc, loc, color, i);
+                                        if (posMove != null)
                                         {
-                                            valid = false;
-                                        }
-
-                                        if (valid)
-                                        {
-                                            val = CalculateBoardState(tempBoard, color);
-                                            //if (depth > 0)
-                                            //{
-                                            //    List<CalcMove> nextMoves = GenerateMoves(tempBoard, color, --depth);
-                                            //    if (nextMoves != null)
-                                            //    {
-                                            //        int maxIndex = CalculateMaxValue(nextMoves);
-                                            //        val = nextMoves[maxIndex].value;
-                                            //    }
-                                            //}
-
-                                            if (ourKingThreatened)
-                                            {
-                                                if (!PieceThreatened(tempBoard, _ourKingLoc, color))
-                                                {
-                                                    val += 1000000;
-                                                    this.Log("Piece can get king out of check, val = " + val);
-                                                }
-                                            }
-
-                                            if (board[newLoc] != ChessPiece.Empty)
-                                            {
-                                                val += GetPieceValue(board[newLoc]);
-                                            }
-
-                                            if (threatened)
-                                            {
-                                                val -= GetPieceValue(piece) * 2;
-                                            }
-
-                                            CalcMove moveToAdd = new CalcMove();
-                                            moveToAdd.move = move;
-                                            moveToAdd.value = val;
-
-                                            moves.Add(moveToAdd);
-                                            this.Log(moveToAdd.move.ToString() + ", value = " + moveToAdd.value);
+                                            moves.Add(posMove);
                                         }
                                     }
                                 }
@@ -424,7 +294,7 @@ namespace StudentAI
                 tempBoard[moves[i].move.To] = tempBoard[moves[i].move.From];
                 tempBoard[moves[i].move.From] = ChessPiece.Empty;
 
-                if (CheckThreatensEnemyKing(tempBoard, moves[i].move.To, _ourColor) && !PieceThreatened(tempBoard, moves[i].move.To, _ourColor))
+                if (CheckThreatensEnemyKing(tempBoard, moves[i].move.To, _ourColor) && !(PieceThreatened(tempBoard, moves[i].move.To, _ourColor) > 0))
                 {
                     moves[i].value += 20;
                 }
@@ -432,6 +302,77 @@ namespace StudentAI
 
             this.Log("");
             return moves;
+        }
+
+        private CalcMove GetPieceMove(ChessBoard board, ChessLocation fromLoc, ChessLocation toLocDelta, ChessColor color, int deltaMod)
+        {
+            ChessPiece piece = board[fromLoc];
+            int val = 0;
+            int sum_x = fromLoc.X + toLocDelta.X * deltaMod;
+            int sum_y = piece == ChessPiece.WhitePawn ? fromLoc.Y - toLocDelta.Y : fromLoc.Y + toLocDelta.Y * deltaMod;
+
+            ChessLocation toLoc = new ChessLocation(sum_x, sum_y);
+
+            if (toLoc.X < 0 || toLoc.X > 7 || toLoc.Y < 0 || toLoc.Y > 7)
+                return null;
+
+            ChessMove move = new ChessMove(fromLoc, toLoc);
+            bool valid = IsValidMove(board, move, color);
+
+            ChessBoard tempBoard = board.Clone();
+            tempBoard[move.To] = tempBoard[move.From];
+            tempBoard[move.From] = ChessPiece.Empty;
+
+            if ((piece == ChessPiece.WhitePawn && move.To.Y == 0) || (piece == ChessPiece.BlackPawn && move.To.Y == 7))
+            {
+                tempBoard[move.To] = color == ChessColor.White ? ChessPiece.WhiteQueen : ChessPiece.BlackQueen;
+            }
+
+            int threatened = PieceThreatened(tempBoard, toLoc, color);
+
+            if ((piece == ChessPiece.WhiteKing || piece == ChessPiece.BlackKing) && threatened > 0)
+            {
+                valid = false;
+            }
+
+            if (PieceThreatened(tempBoard, _ourKingLoc, color) > 0)
+            {
+                valid = false;
+            }
+
+            if (valid)
+            {
+                val += CalculateBoardState(tempBoard, color);
+
+                if (PieceThreatened(board, _ourKingLoc, color) > 0)
+                {
+                    if (!(PieceThreatened(tempBoard, _ourKingLoc, color) > 0))
+                    {
+                        val += 1000000;
+                        this.Log("Piece can get king out of check, val = " + val);
+                    }
+                }
+
+                if (board[toLoc] != ChessPiece.Empty)
+                {
+                    val += GetPieceValue(board[toLoc]);
+                }
+
+                if (threatened > 0)
+                {
+                    val -= GetPieceValue(piece) * 2;
+                }
+
+                CalcMove moveToAdd = new CalcMove();
+                moveToAdd.move = move;
+                moveToAdd.value = val;
+
+                this.Log(moveToAdd.move.ToString() + ", value = " + moveToAdd.value);
+
+                return moveToAdd;
+            }
+
+            return null;
         }
 
         private HashSet<ChessLocation> GetMoveSet(ChessPiece piece)
@@ -496,7 +437,7 @@ namespace StudentAI
         }
 
         // Check if piece in loc is in danger
-        private bool PieceThreatened(ChessBoard board, ChessLocation currentLoc, ChessColor color)
+        private int PieceThreatened(ChessBoard board, ChessLocation currentLoc, ChessColor color)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
             List<ChessMove> moves = new List<ChessMove>();
@@ -518,12 +459,14 @@ namespace StudentAI
                 }
             }
 
-            return moves.Count > 0;
+            return moves.Count;
         }
 
         // See if the king is capable of moving
         private bool CanKingSurvive(ChessBoard board, ChessLocation currentLoc, ChessColor color)
         {
+            int numPiecesThreateningKing = PieceThreatened(board, currentLoc, color);
+
             List<ChessMove> moves = new List<ChessMove>();
 
             foreach (ChessLocation loc in _kingMoves)
@@ -542,6 +485,11 @@ namespace StudentAI
                 }
             }
 
+            if (moves.Count == 0 && numPiecesThreateningKing > 1)
+            {
+                return false;
+            }
+
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
 
             for (int y = 0; y < 8; y++)
@@ -556,7 +504,7 @@ namespace StudentAI
                         ChessMove move = new ChessMove(pieceLoc, currentLoc);
                         if (IsValidMove(board, move, enemyColor))
                         {
-                            if (PieceThreatened(board, pieceLoc, enemyColor))
+                            if (PieceThreatened(board, pieceLoc, enemyColor) > 0)
                             {
                                 moves.Add(move);
                             }
@@ -587,7 +535,7 @@ namespace StudentAI
                                                         tempBoard[blockMove.To] = tempBoard[blockMove.From];
                                                         tempBoard[blockMove.From] = ChessPiece.Empty;
 
-                                                        if (!PieceThreatened(tempBoard, currentLoc, color))
+                                                        if (!(PieceThreatened(tempBoard, currentLoc, color) > 0))
                                                         {
                                                             moves.Add(move);
                                                         }
@@ -943,7 +891,7 @@ namespace StudentAI
                 tempBoard[move.To] = tempBoard[move.From];
                 tempBoard[move.From] = ChessPiece.Empty;
 
-                if(!PieceThreatened(tempBoard, move.To, color))
+                if(!(PieceThreatened(tempBoard, move.To, color) > 0))
                 {
                     moveable = true;
                 }
