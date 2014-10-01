@@ -212,7 +212,7 @@ namespace StudentAI
 
                 CalcMove newMove = new CalcMove();
                 newMove.move = new ChessMove(p_move.From, p_move.To);
-                newMove.value = AlphaBetaMin(tempBoard, enemyColor, CalculateBoardState(tempBoard, color), Int32.MaxValue, 3);
+                newMove.value = AlphaBetaMin(tempBoard, enemyColor, CalculateBoardState(tempBoard, color), Int32.MaxValue, 2);
 
                 if (board[p_move.To] != ChessPiece.Empty)
                 {
@@ -245,6 +245,7 @@ namespace StudentAI
 
         private int AlphaBetaMax(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
         {
+            this.Log("depth: " + depth);
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
 
             double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
@@ -280,6 +281,7 @@ namespace StudentAI
 
         private int AlphaBetaMin(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
         {
+            this.Log("depth: " + depth);
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
 
             double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
