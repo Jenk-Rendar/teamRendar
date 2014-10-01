@@ -161,13 +161,20 @@ namespace StudentAI
 
                 if (!CanKingMove(tempBoard,_enemyKingLoc,_enemyColor))
                 {
+                    this.Log("Enemy king cannot move");
                     if (PieceThreatened(tempBoard, _enemyKingLoc, _enemyColor) > 1)
                     {
+                        this.Log("Multiple threats to enemy king");
                         selectedMove.Flag = ChessFlag.Checkmate;
                     }
-                    else if (!CanPieceThreateningKingBeTaken(tempBoard, _enemyKingLoc, _enemyColor) && !CanKingBeBlocked(board, _enemyKingLoc, _enemyColor))
+                    else if (!CanPieceThreateningKingBeTaken(tempBoard, _enemyKingLoc, _enemyColor))
                     {
-                        selectedMove.Flag = ChessFlag.Checkmate;
+                        this.Log("Piece checking king cannot be taken");
+                        if (!CanKingBeBlocked(tempBoard, _enemyKingLoc, _enemyColor))
+                        {
+                            this.Log("Piece checking king cannot be blocked");
+                            selectedMove.Flag = ChessFlag.Checkmate;
+                        }                       
                     }
                 }
             }
@@ -299,13 +306,17 @@ namespace StudentAI
                 tempBoard[moves[i].move.To] = tempBoard[moves[i].move.From];
                 tempBoard[moves[i].move.From] = ChessPiece.Empty;
 
-                if (CheckThreatensEnemyKing(tempBoard, moves[i].move.To, _ourColor) && !(PieceThreatened(tempBoard, moves[i].move.To, _ourColor) > 0))
+                if (CheckThreatensEnemyKing(tempBoard, moves[i].move.To, _ourColor) && PieceThreatened(tempBoard, moves[i].move.To, _ourColor) == 0)
                 {
                     moves[i].value += 20;
                 }
             }
 
-            this.Log("");
+            if (moves.Count == 0)
+            {
+                this.Log("No moves generated >_<");
+            }
+
             return moves;
         }
 
@@ -356,7 +367,7 @@ namespace StudentAI
 
                 if (PieceThreatened(board, _ourKingLoc, color) > 0)
                 {
-                    if (!(PieceThreatened(tempBoard, _ourKingLoc, color) > 0))
+                    if (PieceThreatened(tempBoard, _ourKingLoc, color) == 0)
                     {
                         val += 1000000;
                         this.Log("Piece can get king out of check, val = " + val);
@@ -498,6 +509,7 @@ namespace StudentAI
         private bool CanPieceThreateningKingBeTaken(ChessBoard board, ChessLocation currentLoc, ChessColor color)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
+            this.Log("Can checking piece be taken");
 
             for (int y = 0; y < 8; y++)
             {
@@ -526,6 +538,7 @@ namespace StudentAI
         private bool CanKingBeBlocked(ChessBoard board, ChessLocation currentLoc, ChessColor color)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
+            this.Log("Can king be blocked");
 
             for (int y = 0; y < 8; y++)
             {
@@ -539,10 +552,13 @@ namespace StudentAI
                         ChessMove move = new ChessMove(pieceLoc, currentLoc);
                         if (IsValidMove(board, move, enemyColor))
                         {
+                            this.Log("Piece checking king found");
                             if (piece != ChessPiece.WhiteKnight && piece != ChessPiece.BlackKnight)
                             {
                                 int d_x = pieceLoc.X - currentLoc.X;
                                 int d_y = pieceLoc.Y - currentLoc.Y;
+
+                                this.Log("d_x = " + d_x + ", d_y = " + d_y);
 
                                 int xDir = 0;
 
@@ -560,10 +576,14 @@ namespace StudentAI
 
                                 int dist = d_x > d_y ? Math.Abs(d_x) : Math.Abs(d_y);
 
+                                this.Log("dist = " + dist);
+
                                 for (int i = 1; i < dist; i++)
                                 {
                                     int xLoc = x + xDir * i;
                                     int yLoc = y + yDir * i;
+
+                                    this.Log("xLoc = " + xLoc + ", yLoc = " + yLoc);
 
                                     ChessLocation blockLoc = new ChessLocation(xLoc, yLoc);
                                     for (int y2 = 0; y2 < 8; y2++)
@@ -578,12 +598,14 @@ namespace StudentAI
                                                 ChessMove blockMove = new ChessMove(blockPieceLoc, blockLoc);
                                                 if (IsValidMove(board, blockMove, color))
                                                 {
+                                                    this.Log("valid piece to block: " + Enum.GetName(typeof(ChessPiece), piece) + " at (" + x2 + ", " + y2 + ")");
                                                     ChessBoard tempBoard = board.Clone();
                                                     tempBoard[blockMove.To] = tempBoard[blockMove.From];
                                                     tempBoard[blockMove.From] = ChessPiece.Empty;
 
-                                                    if (!(PieceThreatened(tempBoard, currentLoc, color) > 0))
+                                                    if (PieceThreatened(tempBoard, currentLoc, color) == 0)
                                                     {
+                                                        this.Log("move is valid and can block the check");
                                                         return true;
                                                     }
                                                 }
@@ -939,7 +961,7 @@ namespace StudentAI
                 tempBoard[move.To] = tempBoard[move.From];
                 tempBoard[move.From] = ChessPiece.Empty;
 
-                if(!(PieceThreatened(tempBoard, move.To, color) > 0))
+                if(PieceThreatened(tempBoard, move.To, color) == 0)
                 {
                     moveable = true;
                 }
