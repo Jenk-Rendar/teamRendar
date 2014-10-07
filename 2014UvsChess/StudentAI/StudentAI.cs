@@ -41,7 +41,7 @@ namespace StudentAI
         //int _turnsTaken;
         // List<ChessMove> _possibleMoves;
         // List<FinalMove> _moveQueue;
-        Dictionary<ChessBoard, int> _calculatedBoards = new Dictionary<ChessBoard, int>();
+        //Dictionary<ChessBoard, int> _calculatedBoards = new Dictionary<ChessBoard, int>();
         ChessColor _ourColor;
         ChessMove _previousMove, _prePreviousMove, _previousCheck, _prePreviousCheck;
         double _startTime;
@@ -224,6 +224,9 @@ namespace StudentAI
             List<ChessMove> possibleMoves = GenerateMoves(board, color);
             List<CalcMove> finishedMoves = new List<CalcMove>();
 
+            int alpha = Int32.MinValue;
+            int beta = Int32.MaxValue;
+
             foreach (ChessMove p_move in possibleMoves)
             {
                 ChessBoard tempBoard = board.Clone();
@@ -232,7 +235,22 @@ namespace StudentAI
 
                 CalcMove newMove = new CalcMove();
                 newMove.move = new ChessMove(p_move.From, p_move.To);
-                newMove.value = AlphaBetaMin(tempBoard, enemyColor, Int32.MinValue, Int32.MaxValue, 2);
+
+                int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, 2);
+
+                if (score >= beta)
+                {
+                    newMove.value = score;
+                }
+                else
+                {
+                    if (score > alpha)
+                    {
+                        alpha = score;
+                    }
+
+                    newMove.value = alpha;
+                }
 
                 //if (board[p_move.From] == ChessPiece.BlackKnight || board[p_move.From] == ChessPiece.WhiteKnight)
                 //{
@@ -380,18 +398,18 @@ namespace StudentAI
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
 
-            if (_calculatedBoards.ContainsKey(board))
-            {
-                if (color == ChessColor.White)
-                {
-                    return _calculatedBoards[board];
-                }
-                else
-                {
-                    return -_calculatedBoards[board];
-                }
+            //if (_calculatedBoards.ContainsKey(board))
+            //{
+            //    if (color == ChessColor.White)
+            //    {
+            //        return _calculatedBoards[board];
+            //    }
+            //    else
+            //    {
+            //        return -_calculatedBoards[board];
+            //    }
 
-            }
+            //}
 
             int total = 0;
 
@@ -423,18 +441,18 @@ namespace StudentAI
                 }
             }
 
-            if (!_calculatedBoards.ContainsKey(board))
-            {
-                if (color == ChessColor.White)
-                {
-                    _calculatedBoards.Add(board, total);
-                }
-                else
-                {
-                    _calculatedBoards.Add(board, -total);
-                }
+            //if (!_calculatedBoards.ContainsKey(board))
+            //{
+            //    if (color == ChessColor.White)
+            //    {
+            //        _calculatedBoards.Add(board, total);
+            //    }
+            //    else
+            //    {
+            //        _calculatedBoards.Add(board, -total);
+            //    }
 
-            }
+            //}
 
             return total;
         }
