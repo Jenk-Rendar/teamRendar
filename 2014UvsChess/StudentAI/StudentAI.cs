@@ -219,10 +219,10 @@ namespace StudentAI
                     newMove.value += GetPieceValue(board[p_move.To]);
                 }
 
-                if (PieceThreatened(tempBoard, p_move.To, color).Count > 0)
-                {
-                    newMove.value -= GetPieceValue(board[p_move.From]) / 3;
-                }
+                //if (PieceThreatened(tempBoard, p_move.To, color).Count > 0)
+                //{
+                //    newMove.value -= GetPieceValue(board[p_move.From]) / 3;
+                //}
 
                 if (finishedMoves.Count > 0)
                 {
