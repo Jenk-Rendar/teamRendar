@@ -107,6 +107,14 @@ namespace StudentAI
             ChessPiece.BlackKing
         };
 
+
+        static public ChessMove[] blackStartMoves = 
+        {
+            new ChessMove(new ChessLocation(4,1), new ChessLocation(4,3)),
+            new ChessMove(new ChessLocation(5,0), new ChessLocation(2,3)),
+            new ChessMove(new ChessLocation(3,0), new ChessLocation(7,4))
+        };
+
         /// <summary>
         /// Evaluates the chess board and decided which move to make. This is the main method of the AI.
         /// The framework will call this method when it's your turn.
@@ -135,14 +143,14 @@ namespace StudentAI
 
             ChessMove selectedMove = moves[0].move.Clone();
 
-            List<CalcMove> maxMoves = GetMaxMoves(moves);
+            //List<CalcMove> maxMoves = GetMaxMoves(moves);
 
-            if (maxMoves.Count > 0)
-            {
-                Random rnd = new Random();
-                int rndIndex = rnd.Next() % maxMoves.Count;
-                selectedMove = maxMoves[rndIndex].move.Clone();
-            }
+            //if (maxMoves.Count > 0)
+            //{
+            //    Random rnd = new Random();
+            //    int rndIndex = rnd.Next() % maxMoves.Count;
+            //    selectedMove = maxMoves[rndIndex].move.Clone();
+            //}
 
             _prePreviousMove = _previousMove;
             _previousMove = selectedMove;
@@ -239,19 +247,12 @@ namespace StudentAI
 
                 int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, DEPTH);
 
-                if (score >= beta)
+                if (score > alpha)
                 {
-                    newMove.value = score;
+                    alpha = score;
                 }
-                else
-                {
-                    if (score > alpha)
-                    {
-                        alpha = score;
-                    }
 
-                    newMove.value = alpha;
-                }
+                newMove.value = score;
 
                 //if (board[p_move.From] == ChessPiece.BlackKnight || board[p_move.From] == ChessPiece.WhiteKnight)
                 //{
@@ -363,7 +364,7 @@ namespace StudentAI
 
             if (Checkmate(board, findKing(board, enemyColor), enemyColor))
             {
-                return CHECKMATE_VAL;
+                return -CHECKMATE_VAL;
             }
 
             if (timeSpent >= MAX_TIME || depth == 0)
@@ -648,14 +649,14 @@ namespace StudentAI
         {
             if (color == ChessColor.White)
             {
-                if (piece == ChessPiece.WhitePawn || piece == ChessPiece.WhiteKnight || piece == ChessPiece.WhiteBishop || piece == ChessPiece.WhiteRook || piece == ChessPiece.WhiteQueen || piece == ChessPiece.WhiteKing)
+                if (piece > ChessPiece.Empty)
                 {
                     return true;
                 }
             }
             else
             {
-                if (piece == ChessPiece.BlackPawn || piece == ChessPiece.BlackKnight || piece == ChessPiece.BlackBishop || piece == ChessPiece.BlackRook || piece == ChessPiece.BlackQueen || piece == ChessPiece.BlackKing)
+                if (piece < ChessPiece.Empty)
                 {
                     return true;
                 }
@@ -676,7 +677,7 @@ namespace StudentAI
                 {
                     ChessPiece piece = board[x, y];
 
-                    if (piece != ChessPiece.Empty)
+                    if (piece != ChessPiece.Empty && PieceIsSameColor(piece, enemyColor))
                     {
                         ChessMove move = new ChessMove(new ChessLocation(x, y), currentLoc);
                         if (IsValidMove(board, move, enemyColor))
@@ -713,7 +714,7 @@ namespace StudentAI
             return moves.Count > 0;
         }
 
-        private bool CanPieceThreateningKingBeTaken(ChessBoard board, ChessLocation currentLoc, ChessColor color)
+        private bool CanPieceThreateningKingBeTaken(ChessBoard board, ChessLocation kingLoc, ChessColor color)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
             this.Log("Can checking piece be taken");
@@ -727,7 +728,7 @@ namespace StudentAI
                     if (piece != ChessPiece.Empty)
                     {
                         ChessLocation pieceLoc = new ChessLocation(x, y);
-                        ChessMove move = new ChessMove(pieceLoc, currentLoc);
+                        ChessMove move = new ChessMove(pieceLoc, kingLoc);
                         if (IsValidMove(board, move, enemyColor))
                         {
                             if (PieceThreatened(board, pieceLoc, enemyColor).Count > 0)
