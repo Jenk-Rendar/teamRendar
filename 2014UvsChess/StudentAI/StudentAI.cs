@@ -47,6 +47,7 @@ namespace StudentAI
         double _startTime;
         const int MAX_TIME = 4900;
         const int CHECKMATE_VAL = 10000000;
+        const int DEPTH = 4;
 
         HashSet<ChessLocation> _kingMoves = new HashSet<ChessLocation>()
         {
@@ -236,7 +237,7 @@ namespace StudentAI
                 CalcMove newMove = new CalcMove();
                 newMove.move = new ChessMove(p_move.From, p_move.To);
 
-                int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, 2);
+                int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, DEPTH);
 
                 if (score >= beta)
                 {
