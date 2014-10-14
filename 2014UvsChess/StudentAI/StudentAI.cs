@@ -233,9 +233,6 @@ namespace StudentAI
             List<ChessMove> possibleMoves = GenerateMoves(board, color);
             List<CalcMove> finishedMoves = new List<CalcMove>();
 
-            int alpha = Int32.MinValue;
-            int beta = Int32.MaxValue;
-
             foreach (ChessMove p_move in possibleMoves)
             {
                 ChessBoard tempBoard = board.Clone();
@@ -244,15 +241,7 @@ namespace StudentAI
 
                 CalcMove newMove = new CalcMove();
                 newMove.move = new ChessMove(p_move.From, p_move.To);
-
-                int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, DEPTH);
-
-                if (score > alpha)
-                {
-                    alpha = score;
-                }
-
-                newMove.value = score;
+                newMove.value = AlphaBeta(tempBoard, 0, DEPTH, color, color, Int32.MinValue, Int32.MaxValue);
 
                 //if (board[p_move.From] == ChessPiece.BlackKnight || board[p_move.From] == ChessPiece.WhiteKnight)
                 //{
@@ -316,84 +305,55 @@ namespace StudentAI
             return finishedMoves;
         }
 
-        private int AlphaBetaMax(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
+        private int AlphaBeta(ChessBoard board, int depth, int maxdepth, ChessColor color, ChessColor myColor, int alpha, int beta)
         {
-            ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
+            ChessColor enemyColor = (color == ChessColor.Black) ? ChessColor.White : ChessColor.Black;
 
             double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
 
-            if (Checkmate(board, findKing(board, enemyColor), enemyColor))
+            if (timeSpent >= MAX_TIME || depth == maxdepth) // || isCheckMate(board.RawBoard, oppColor))
             {
-                return CHECKMATE_VAL;
+                return CalculateBoardState(board, myColor);
             }
 
-            if (timeSpent >= MAX_TIME || depth == 0)
+            if (myColor != color)
             {
-                return CalculateBoardState(board, color);
-            }
+                List<ChessMove> maxMoves = GenerateMoves(board, myColor);
+                if (maxMoves == null)
+                    return -CHECKMATE_VAL;
 
-            List<ChessMove> possibleMoves = GenerateMoves(board, color);
-
-            foreach (ChessMove move in possibleMoves)
-            {
-                ChessBoard tempBoard = board.Clone();
-                tempBoard[move.To] = tempBoard[move.From];
-                tempBoard[move.From] = ChessPiece.Empty;
-
-                int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, depth - 1);
-
-                if (score >= beta)
+                foreach (ChessMove p_move in maxMoves)
                 {
-                    return score;
+                    ChessBoard tempBoard = board.Clone();
+                    tempBoard[p_move.To] = tempBoard[p_move.From];
+                    tempBoard[p_move.From] = ChessPiece.Empty;
+
+                    alpha = Math.Max(alpha, AlphaBeta(tempBoard, depth + 1, maxdepth, myColor, myColor, alpha, beta));
+                    if (alpha >= beta)
+                        break;
+                }
+                return alpha;
+            }
+            else
+            {
+                List<ChessMove> minMoves = GenerateMoves(board, enemyColor);
+                if (minMoves == null)
+                    return CHECKMATE_VAL;
+
+                foreach (ChessMove p_move in minMoves)
+                {
+                    ChessBoard tempBoard = board.Clone();
+                    tempBoard[p_move.To] = tempBoard[p_move.From];
+                    tempBoard[p_move.From] = ChessPiece.Empty;
+
+                    beta = Math.Min(beta, AlphaBeta(tempBoard, depth + 1, maxdepth, enemyColor, myColor, alpha, beta));
+                    if (alpha >= beta)
+                        break;
                 }
 
-                if (score > alpha)
-                {
-                    alpha = score;
-                }
+                return beta;
             }
 
-            return alpha;
-        }
-
-        private int AlphaBetaMin(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
-        {
-            ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-
-            double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
-
-            if (Checkmate(board, findKing(board, enemyColor), enemyColor))
-            {
-                return -CHECKMATE_VAL;
-            }
-
-            if (timeSpent >= MAX_TIME || depth == 0)
-            {
-                return CalculateBoardState(board, color);
-            }
-
-            List<ChessMove> possibleMoves = GenerateMoves(board, color);
-
-            foreach (ChessMove move in possibleMoves)
-            {
-                ChessBoard tempBoard = board.Clone();
-                tempBoard[move.To] = tempBoard[move.From];
-                tempBoard[move.From] = ChessPiece.Empty;
-
-                int score = AlphaBetaMax(tempBoard, enemyColor, alpha, beta, depth - 1);
-
-                if (score <= alpha)
-                {
-                    return score;
-                }
-
-                if (score < beta)
-                {
-                    beta = score;
-                }
-            }
-
-            return beta;
         }
 
         private int CalculateBoardState(ChessBoard board, ChessColor color)
