@@ -5,3 +5,17 @@ C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\StudentAI\bin\x86\De
 C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.csprojResolveAssemblyReference.cache
 C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.dll
 C:\Users\murra_000\Documents\GitHub\teamRendar\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.pdb
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\bin\x86\Debug\StudentAI.dll
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\bin\x86\Debug\StudentAI.pdb
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\bin\x86\Debug\UvsChess.exe
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\bin\x86\Debug\UvsChess.pdb
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.csprojResolveAssemblyReference.cache
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.dll
+D:\Users\Gazebo_Prime\Google Drive\GitHub\teamRendar\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.pdb
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\bin\x86\Debug\StudentAI.dll
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\bin\x86\Debug\StudentAI.pdb
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\bin\x86\Debug\UvsChess.exe
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\bin\x86\Debug\UvsChess.pdb
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.csprojResolveAssemblyReference.cache
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.dll
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\StudentAI\obj\x86\Debug\StudentAI.pdb

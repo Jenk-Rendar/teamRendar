@@ -22,29 +22,33 @@ namespace StudentAI
 #endif
         }
 
-        public struct alphaBeta {
+        public struct alphaBeta
+        {
             public int alpha;
             public int beta;
         }
 
         enum PieceValues : int
         {
-            Pawn = 1000,
-            Knight = 3000,
-            Bishop = 3000,
-            Rook = 5000,
-            Queen = 9000,
-            King = 100000
+            Pawn = 10000,
+            Knight = 30000,
+            Bishop = 30000,
+            Rook = 50000,
+            Queen = 90000,
+            King = 1000000
         }
 
-        
+        public struct gravitySpace
+        {
+            public int gravity;
+            public int coverage;
+        }
 
-            
-            //public ChessMove startMovesBlack = {};
-        //ChessMove first; 
-        //first.From = new ChessLocation(-1,-1);
+        public gravitySpace[,] gravity = new gravitySpace[8, 8];
 
-        static public ChessMove[] blackStartMoves  = 
+        public bool firstPassEnemyMoves = false;
+
+        static public ChessMove[] blackStartMoves =
         {
            new ChessMove(new ChessLocation(4,1), new ChessLocation(4,3)),
            new ChessMove(new ChessLocation(5,0), new ChessLocation(2,3)),
@@ -52,8 +56,7 @@ namespace StudentAI
         };
         static public int totalMoveCount = 0;
 
-        Dictionary<ChessBoard,int> _calculatedBoards = new Dictionary<ChessBoard,int>();
-        Dictionary<ChessBoard, int[,]> _calculatedGravityBoards = new Dictionary<ChessBoard, int[,]>(); 
+        Dictionary<ChessBoard, int> _calculatedBoards = new Dictionary<ChessBoard, int>();
 
         public const int DEPTH = 2;
 
@@ -63,10 +66,6 @@ namespace StudentAI
             public int value;
         }
 
-        //int _turnsTaken;
-        // List<ChessMove> _possibleMoves;
-        // List<FinalMove> _moveQueue;
-        //Dictionary<ChessBoard, int> _calculatedBoards = new Dictionary<ChessBoard, int>();
         ChessColor _ourColor;
         ChessMove _previousMove, _prePreviousMove, _previousCheck, _prePreviousCheck;
         double _startTime;
@@ -140,7 +139,13 @@ namespace StudentAI
         /// <returns> Returns the best chess move the player has for the given chess board</returns>
         public ChessMove GetNextMove(ChessBoard board, ChessColor myColor)
         {
+            this.Log("NEW MOVE BEING CALLED NOW");
+            this.Log("");
+            this.Log("");
             _startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            GenerateGravity(board, myColor);
+            firstPassEnemyMoves = true;
+
             //_turnsTaken++;
             _ourColor = myColor;
             ChessColor enemyColor = myColor == ChessColor.White ? ChessColor.Black : ChessColor.White;
@@ -206,18 +211,18 @@ namespace StudentAI
 
                 if (!CanKingMove(tempBoard, enemyKingLoc, enemyColor))
                 {
-                    this.Log("Enemy king cannot move");
+                    //this.Log("Enemy king cannot move");
                     if (numPiecesThreateningEnemyKing > 1)
                     {
-                        this.Log("Multiple threats to enemy king");
+                        //this.Log("Multiple threats to enemy king");
                         selectedMove.Flag = ChessFlag.Checkmate;
                     }
                     else if (!CanPieceThreateningKingBeTaken(tempBoard, enemyKingLoc, enemyColor))
                     {
-                        this.Log("Piece checking king cannot be taken");
+                        //this.Log("Piece checking king cannot be taken");
                         if (!CanKingBeBlocked(tempBoard, enemyKingLoc, enemyColor))
                         {
-                            this.Log("Piece checking king cannot be blocked");
+                            //this.Log("Piece checking king cannot be blocked");
                             selectedMove.Flag = ChessFlag.Checkmate;
                         }
                     }
@@ -260,7 +265,7 @@ namespace StudentAI
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
 
-            List<ChessMove> possibleMoves = GenerateMoves(board, color);
+            List<ChessMove> possibleMoves = GenerateMoves(board, color, true, true);
             List<CalcMove> finishedMoves = new List<CalcMove>();
 
             foreach (ChessMove p_move in possibleMoves)
@@ -269,60 +274,38 @@ namespace StudentAI
                 tempBoard[p_move.To] = tempBoard[p_move.From];
                 tempBoard[p_move.From] = ChessPiece.Empty;
 
+
                 CalcMove newMove = new CalcMove();
                 newMove.move = new ChessMove(p_move.From, p_move.To);
-
+                this.Log(p_move.ToString());
+                ChessPiece piece = board[newMove.move.From.X, newMove.move.From.Y];
                 if (Checkmate(tempBoard, findKing(tempBoard, enemyColor), enemyColor))
                 {
                     newMove.value = CHECKMATE_VAL;
                 }
+
                 else
                 {
                     newMove.value = AlphaBetaMin(tempBoard, color, Int32.MinValue, Int32.MaxValue, DEPTH);
-                    //newMove.value = AlphaBeta(tempBoard, 0, DEPTH, color, color, Int32.MinValue, Int32.MaxValue);
                 }
-                //if (board[p_move.From] == ChessPiece.BlackKnight || board[p_move.From] == ChessPiece.WhiteKnight)
-                //{
-                //    if(GetNumPawns(board, color) > 4)
-                //    {
-                //        newMove.value += 1;
-                //    }
-                //}
-                //else if (board[p_move.From] == ChessPiece.BlackBishop || board[p_move.From] == ChessPiece.WhiteBishop)
-                //{
-                //    if (GetNumPawns(board, color) <= 4)
-                //    {
-                //        newMove.value += 1;
-                //    }
-                //}
 
-                //if (board[p_move.To] != ChessPiece.Empty && newMove.value < CHECKMATE_VAL)
-                //{
-                //    if (GetPieceValue(board[p_move.To]) > GetPieceValue(board[p_move.From]))
-                //        newMove.value += 1000;
-                //    else
-                //        newMove.value += 100;
-                //}
 
-                //if (PieceThreatened(tempBoard, p_move.To, color).Count > 0)
-                //{
-                //    newMove.value -= 100;
-                //}
-
-                //if (newMove.value < CHECKMATE_VAL && PieceThreatened(tempBoard, findKing(tempBoard, enemyColor), enemyColor).Count > 0)
-                //{
-                //    if (PieceThreatened(tempBoard, p_move.To, color).Count == 0)
-                //        newMove.value += 10000;
-                //}
-
-                //if (PieceThreatened(board, findKing(board, color), color).Count > 0 && newMove.value < CHECKMATE_VAL)
-                //{
-                //    if (PieceThreatened(tempBoard, findKing(board, color), color).Count == 0)
-                //    {
-                //        newMove.value += 100000;
-                //        this.Log("Piece can get king out of check, val = " + newMove.value);
-                //    }
-                //}
+                int val = GetPieceValue(piece) / 100;
+                if (piece == ChessPiece.BlackKing || piece == ChessPiece.WhiteKing)
+                    val = GetPieceValue(ChessPiece.BlackPawn) / 100;
+                if (gravity[newMove.move.To.X, newMove.move.To.Y].gravity > 9999)
+                {
+                    int test = 0;
+                }
+                this.Log("val: " + val);
+                this.Log("gravity: " + gravity[newMove.move.To.X, newMove.move.To.Y].gravity);
+                this.Log("coverage: " + gravity[newMove.move.To.X, newMove.move.To.Y].coverage);
+                this.Log("1st: " + newMove.value);
+                newMove.value += (gravity[newMove.move.To.X, newMove.move.To.Y].gravity);
+                newMove.value += ((gravity[newMove.move.To.X, newMove.move.To.Y].coverage - 1) * val);
+                this.Log("2nd: " + newMove.value);
+                this.Log(String.Format("Move from {0},{1} to {2},{3} has a newMove.value = {4}", newMove.move.From.X, newMove.move.From.Y, newMove.move.To.X,
+                    newMove.move.To.Y, newMove.value));
 
                 if (finishedMoves.Count > 0)
                 {
@@ -347,12 +330,13 @@ namespace StudentAI
         private int AlphaBetaMax(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-
+            //this.Log(String.Format("Max - depth {0}", depth));
             double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
 
             if (Checkmate(board, findKing(board, enemyColor), enemyColor))
             {
-                return CHECKMATE_VAL;
+                this.Log("Enemy about to checkmate us.");
+                return -CHECKMATE_VAL;
             }
 
             if (timeSpent >= MAX_TIME || depth == 0)
@@ -360,7 +344,7 @@ namespace StudentAI
                 return CalculateBoardState(board, color);
             }
 
-            List<ChessMove> possibleMoves = GenerateMoves(board, enemyColor);
+            List<ChessMove> possibleMoves = GenerateMoves(board, enemyColor, firstPassEnemyMoves);
 
             foreach (ChessMove move in possibleMoves)
             {
@@ -381,7 +365,7 @@ namespace StudentAI
         private int AlphaBetaMin(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-
+            //this.Log(String.Format("Min depth - {0}", depth));
             double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
 
             if (Checkmate(board, findKing(board, enemyColor), enemyColor))
@@ -412,276 +396,9 @@ namespace StudentAI
             return beta;
         }
 
-        //private List<CalcMove> StartAlphaBeta(ChessBoard board, ChessColor color)
-        //{
-        //    ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-
-        //    List<ChessMove> possibleMoves = GenerateMoves(board, color);
-        //    List<CalcMove> finishedMoves = new List<CalcMove>();
-
-        //    int alpha = Int32.MinValue;
-        //    int beta = Int32.MaxValue;
-        //    //alphaBeta alpha_Beta = new alphaBeta();
-        //    //alpha_Beta.alpha = Int32.MinValue;
-        //    //alpha_Beta.beta = Int32.MaxValue;
-            
-        //    foreach (ChessMove p_move in possibleMoves)
-        //    {
-        //        ChessBoard tempBoard = board.Clone();
-        //        tempBoard[p_move.To] = tempBoard[p_move.From];
-        //        tempBoard[p_move.From] = ChessPiece.Empty;
-        //        bool checkMateFound = false;
-
-        //        CalcMove newMove = new CalcMove();
-        //        newMove.move = new ChessMove(p_move.From, p_move.To);
-        //        int score = 0;
-
-        //        if (tempBoard[5, 6] == ChessPiece.BlackBishop || tempBoard[5, 6] == ChessPiece.BlackQueen)
-        //        {
-        //            var test = 0;
-        //        }
-
-        //        if (Checkmate(tempBoard, findKing(tempBoard, enemyColor), enemyColor))
-        //        {
-        //            score = CHECKMATE_VAL;
-        //            checkMateFound = true;
-        //        }
-        //        else 
-        //        {
-        //            //score = AlphaBetaMax(tempBoard, enemyColor, ref alpha_Beta, DEPTH).beta;
-        //            score = AlphaBetaMax(tempBoard, color, alpha, beta, DEPTH);
-        //        }
-
-        //        if (score >= beta) //alpha_Beta.beta)
-        //        {
-        //            newMove.value = score;
-        //        }
-        //        else
-        //        {
-        //            if (score > alpha)//alpha_Beta.alpha)
-        //            {
-        //                //alpha_Beta.
-        //                    alpha = score;
-        //            }
-
-        //            newMove.value = alpha;// _Beta.alpha;
-        //        }
-        //        this.Log("[" + newMove.move.To.X + ", " + newMove.move.To.Y+"] - "+newMove.value);
-                
-        //        //if (board[p_move.From] == ChessPiece.BlackKnight || board[p_move.From] == ChessPiece.WhiteKnight)
-        //        //{
-        //        //    if(GetNumPawns(board, color) > 4)
-        //        //    {
-        //        //        newMove.value += 1;
-        //        //    }
-        //        //}
-        //        //else if (board[p_move.From] == ChessPiece.BlackBishop || board[p_move.From] == ChessPiece.WhiteBishop)
-        //        //{
-        //        //    if (GetNumPawns(board, color) <= 4)
-        //        //    {
-        //        //        newMove.value += 1;
-        //        //    }
-        //        //}
-
-        //        //if (board[p_move.To] != ChessPiece.Empty && newMove.value < CHECKMATE_VAL)
-        //        //{
-        //        //    if (GetPieceValue(board[p_move.To]) > GetPieceValue(board[p_move.From]))
-        //        //        newMove.value += 1000;
-        //        //    else
-        //        //        newMove.value += 100;
-        //        //}
-
-        //        //if (PieceThreatened(tempBoard, p_move.To, color).Count > 0)
-        //        //{
-        //        //    newMove.value -= 100;
-        //        //}
-
-        //        //if (newMove.value < CHECKMATE_VAL && PieceThreatened(tempBoard, findKing(tempBoard, enemyColor), enemyColor).Count > 0)
-        //        //{
-        //        //    if (PieceThreatened(tempBoard, p_move.To, color).Count == 0)
-        //        //        newMove.value += 10000;
-        //        //}
-
-        //        //if (PieceThreatened(board, findKing(board, color), color).Count > 0 && newMove.value < CHECKMATE_VAL)
-        //        //{
-        //        //    if (PieceThreatened(tempBoard, findKing(board, color), color).Count == 0)
-        //        //    {
-        //        //        newMove.value += 100000;
-        //        //        this.Log("Piece can get king out of check, val = " + newMove.value);
-        //        //    }
-        //        //}
-               
-        //        if (finishedMoves.Count > 0)
-        //        {
-        //            int i = 0;
-
-        //            if (color == ChessColor.White)
-        //                while (i < finishedMoves.Count && newMove.value <= finishedMoves[i].value) i++;
-        //            else
-        //                while (i < finishedMoves.Count && newMove.value < finishedMoves[i].value) i++;
-        //            finishedMoves.Insert(i, newMove);
-        //        }
-        //        else
-        //        {
-        //            finishedMoves.Add(newMove);
-        //        }
-        //        if (checkMateFound)
-        //        {
-        //            break;
-        //        }
-        //    }
-
-        //    return finishedMoves;
-        //}
-
-
-        private int AlphaBeta(ChessBoard board, int depth, int maxdepth, ChessColor color, ChessColor myColor, int alpha, int beta)
-        {
-            ChessColor enemyColor = (color == ChessColor.Black) ? ChessColor.White : ChessColor.Black;
-
-            double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
-
-            if (timeSpent >= MAX_TIME || depth == maxdepth) // || isCheckMate(board.RawBoard, oppColor))
-            {
-                return CalculateBoardState(board, myColor);
-            }
-
-            if (myColor != color)
-            {
-                List<ChessMove> maxMoves = GenerateMoves(board, myColor);
-                if (maxMoves == null)
-                    return -CHECKMATE_VAL;
-
-                foreach (ChessMove p_move in maxMoves)
-                {
-                    ChessBoard tempBoard = board.Clone();
-                    tempBoard[p_move.To] = tempBoard[p_move.From];
-                    tempBoard[p_move.From] = ChessPiece.Empty;
-
-                    alpha = Math.Max(alpha, AlphaBeta(tempBoard, depth + 1, maxdepth, myColor, myColor, alpha, beta));
-                    if (alpha >= beta)
-                        break;
-                }
-                return alpha;
-            }
-            else
-            {
-                List<ChessMove> minMoves = GenerateMoves(board, enemyColor);
-                if (minMoves == null)
-                    return CHECKMATE_VAL;
-
-                foreach (ChessMove p_move in minMoves)
-                {
-                    ChessBoard tempBoard = board.Clone();
-                    tempBoard[p_move.To] = tempBoard[p_move.From];
-                    tempBoard[p_move.From] = ChessPiece.Empty;
-
-                    beta = Math.Min(beta, AlphaBeta(tempBoard, depth + 1, maxdepth, enemyColor, myColor, alpha, beta));
-                    if (alpha >= beta)
-                        break;
-                }
-
-                return beta;
-            }
-
-        }
-
-        //private int AlphaBetaMax(ChessBoard board, ChessColor color,int alpha, int beta, int depth)// ref alphaBeta alpha_Beta
-        //{
-        //    ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-
-        //    double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
-
-        //    if (Checkmate(board, findKing(board, enemyColor), enemyColor))
-        //    {
-        //        //alpha_Beta.alpha = CHECKMATE_VAL;
-        //        //return alpha_Beta;
-        //         return CHECKMATE_VAL;
-        //    }
-
-        //    if (timeSpent >= MAX_TIME || depth == 0)
-        //    {
-        //        //alpha_Beta.alpha = CalculateBoardState(board, color, depth);
-        //        //return alpha_Beta;
-        //        return CalculateBoardState(board, color, depth);
-        //    }
-
-        //    List<ChessMove> possibleMoves = GenerateMoves(board, color);
-
-        //    foreach (ChessMove move in possibleMoves)
-        //    {
-        //        //this.Log("To: " + move.To);
-        //        //this.Log("From: " + move.From);
-        //        ChessBoard tempBoard = board.Clone();
-        //        tempBoard[move.To] = tempBoard[move.From];
-        //        tempBoard[move.From] = ChessPiece.Empty;
-
-           
-        //        //alpha_Beta.alpha = CalculateBoardState(tempBoard, color);
-                
-        //        int score = AlphaBetaMin(tempBoard, enemyColor, alpha, beta, depth - 1);//alpha;
-
-        //        if (score >= beta)
-        //        {
-        //            return score;
-        //        }
-
-        //        if (score > alpha)
-        //        {
-        //            alpha = score;
-        //        }
-        //    }
-
-        //    return alpha;
-        //}
-
-        //private int AlphaBetaMin(ChessBoard board, ChessColor color, int alpha, int beta, int depth)
-        //{
-        //    ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-
-        //    double timeSpent = DateTime.Now.TimeOfDay.TotalMilliseconds - _startTime;
-
-        //    if (Checkmate(board, findKing(board, enemyColor), enemyColor))
-        //    {
-        //        //alpha_Beta.beta = -CHECKMATE_VAL;
-        //        //return alpha_Beta;
-        //        return CHECKMATE_VAL;
-        //    }
-
-        //    if (timeSpent >= MAX_TIME || depth == 0)
-        //    {
-        //        //alpha_Beta.beta = CalculateBoardState(board, color, depth);
-        //        //return alpha_Beta;
-        //        return CalculateBoardState(board, color);
-        //    }
-
-        //    List<ChessMove> possibleMoves = GenerateMoves(board, color);
-
-        //    foreach (ChessMove move in possibleMoves)
-        //    {
-        //        ChessBoard tempBoard = board.Clone();
-        //        tempBoard[move.To] = tempBoard[move.From];
-        //        tempBoard[move.From] = ChessPiece.Empty;
-
-        //        int score = AlphaBetaMax(tempBoard, enemyColor, alpha, beta, depth - 1);//.beta;
-
-        //        if (score <= alpha)
-        //        {
-        //            return score;
-        //        }
-
-        //        if (score < beta)
-        //        {
-        //            beta = score;
-        //        }
-        //    }
-
-        //    return beta;
-        //}
-
         private int CalculateBoardState(ChessBoard board, ChessColor color, int depth = DEPTH)
         {
-            int depthFactor = (DEPTH - (DEPTH -depth)) + 1;
+            int depthFactor = (DEPTH - (DEPTH - depth)) + 1;
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
 
             if (_calculatedBoards.ContainsKey(board))
@@ -701,11 +418,11 @@ namespace StudentAI
 
             if (Checkmate(board, findKing(board, enemyColor), enemyColor))
             {
-                total = CHECKMATE_VAL/depthFactor;
+                total = CHECKMATE_VAL / depthFactor;
             }
             else if (Checkmate(board, findKing(board, color), color))
             {
-                total = -CHECKMATE_VAL/depthFactor;
+                total = -CHECKMATE_VAL / depthFactor;
             }
             else
             {
@@ -744,10 +461,9 @@ namespace StudentAI
 
             if (!_calculatedBoards.ContainsKey(board))
             {
-                _calculatedGravityBoards.Add(board, GenerateGravity(board));
                 if (color == ChessColor.White)
                 {
-                    
+
                     _calculatedBoards.Add(board, total);
                 }
                 else
@@ -759,11 +475,11 @@ namespace StudentAI
             return total;
         }
 
-        private int[,] GenerateGravity(ChessBoard _currentBoard)
+        private void GenerateGravity(ChessBoard _currentBoard, ChessColor myColor)
         {
+            ChessLocation enemyKingLoc = (myColor == ChessColor.White ? findKing(_currentBoard, ChessColor.Black) : findKing(_currentBoard, ChessColor.White));
             int _numEnemyPieces = 0;
-            int[,] gravity = new int[8,8];
-            List<ChessMove> moves = new List<ChessMove>();
+            gravity = new gravitySpace[8, 8];
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
@@ -776,7 +492,7 @@ namespace StudentAI
                         pieceType = pieceType.Remove(0, 5);
 
                         // If the piece is our piece
-                        if ((piece < ChessPiece.Empty && _ourColor == ChessColor.Black) || (piece > ChessPiece.Empty && _ourColor == ChessColor.White))
+                        if ((piece < ChessPiece.Empty && myColor == ChessColor.Black) || (piece > ChessPiece.Empty && myColor == ChessColor.White))
                         {
                             ours = true;
                         }
@@ -786,15 +502,23 @@ namespace StudentAI
                             _numEnemyPieces++;
                         }
 
-                        gravity[x,y] += ours || pieceType == "King" ? 0 : GetPieceValue(piece);
+                        gravity[x, y].gravity += ours || pieceType == "King" ? 0 : GetPieceValue(piece) / 1000;
+                        int xDiff = Math.Abs(x - enemyKingLoc.X);
+                        int yDiff = Math.Abs(y - enemyKingLoc.Y);
+                        if (xDiff < yDiff)
+                        {
+                            gravity[x, y].gravity += xDiff;
+                        }
+                        else
+                        {
+                            gravity[x, y].gravity += yDiff;
+                        }
                     }
                 }
             }
-
-            return gravity;
         }
 
-        private List<ChessMove> GenerateMoves(ChessBoard board, ChessColor color)
+        private List<ChessMove> GenerateMoves(ChessBoard board, ChessColor color, bool addGravity = false, bool isOurPiece = false)
         {
             List<ChessMove> moves = new List<ChessMove>();
             int[,] boardState = new int[8, 8];
@@ -819,6 +543,17 @@ namespace StudentAI
                                 if (posMove != null)
                                 {
                                     moves.Add(posMove);
+                                    if (addGravity)
+                                    {
+                                        if (isOurPiece)
+                                        {
+                                            gravity[posMove.To.X, posMove.To.Y].coverage += 1;//.gravity += GetPieceValue(piece) / 10;
+                                        }
+                                        else if (firstPassEnemyMoves)
+                                        {
+                                            gravity[posMove.To.X, posMove.To.Y].coverage -= 1;//.gravity -= GetPieceValue(piece) / 10;
+                                        }
+                                    }
                                 }
                             }
                             else
@@ -829,10 +564,23 @@ namespace StudentAI
                                     if (posMove != null)
                                     {
                                         moves.Add(posMove);
+                                        if (addGravity)
+                                        {
+                                            if (isOurPiece)
+                                            {
+                                                gravity[posMove.To.X, posMove.To.Y].coverage += 1;//.gravity += GetPieceValue(piece) / 10;
+                                            }
+                                            else if (firstPassEnemyMoves)
+                                            {
+                                                gravity[posMove.To.X, posMove.To.Y].coverage -= 1;//.gravity -= GetPieceValue(piece) / 10;
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
+                        if (!isOurPiece)
+                            firstPassEnemyMoves = false;
                     }
                 }
             }
@@ -892,27 +640,6 @@ namespace StudentAI
 
             if (valid)
             {
-                //val += CalculateBoardState(tempBoard, color);
-
-                //if (PieceThreatened(board, _ourKingLoc, color) > 0)
-                //{
-                //    if (PieceThreatened(tempBoard, _ourKingLoc, color) == 0)
-                //    {
-                //        val += 1000000;
-                //        this.Log("Piece can get king out of check, val = " + val);
-                //    }
-                //}
-
-                //if (board[toLoc] != ChessPiece.Empty)
-                //{
-                //    val += GetPieceValue(board[toLoc]);
-                //}
-
-                //if (threatened > 0)
-                //{
-                //    val -= GetPieceValue(piece) * 2;
-                //}
-
                 return move;
             }
 
@@ -924,27 +651,27 @@ namespace StudentAI
             HashSet<ChessLocation> moveSet = null;
             if (piece == ChessPiece.WhitePawn || piece == ChessPiece.BlackPawn)
             {
-                moveSet = _pawnMoves;
+                return _pawnMoves;
             }
             else if (piece == ChessPiece.WhiteKnight || piece == ChessPiece.BlackKnight)
             {
-                moveSet = _knightMoves;
+                return _knightMoves;
             }
             else if (piece == ChessPiece.WhiteBishop || piece == ChessPiece.BlackBishop)
             {
-                moveSet = _bishopMoves;
+                return _bishopMoves;
             }
             else if (piece == ChessPiece.WhiteRook || piece == ChessPiece.BlackRook)
             {
-                moveSet = _rookMoves;
+                return _rookMoves;
             }
             else if (piece == ChessPiece.WhiteQueen || piece == ChessPiece.BlackQueen)
             {
-                moveSet = _kingMoves;
+                return _kingMoves;
             }
             else if (piece == ChessPiece.WhiteKing || piece == ChessPiece.BlackKing)
             {
-                moveSet = _kingMoves;
+                return _kingMoves;
             }
             return moveSet;
         }
@@ -955,27 +682,27 @@ namespace StudentAI
 
             if (piece == ChessPiece.WhitePawn || piece == ChessPiece.BlackPawn)
             {
-                val += (int)PieceValues.Pawn;
+                return (int)PieceValues.Pawn;
             }
             else if (piece == ChessPiece.WhiteKnight || piece == ChessPiece.BlackKnight)
             {
-                val += (int)PieceValues.Knight;
+                return (int)PieceValues.Knight;
             }
             else if (piece == ChessPiece.WhiteBishop || piece == ChessPiece.BlackBishop)
             {
-                val += (int)PieceValues.Bishop;
+                return (int)PieceValues.Bishop;
             }
             else if (piece == ChessPiece.WhiteRook || piece == ChessPiece.BlackRook)
             {
-                val += (int)PieceValues.Rook;
+                return (int)PieceValues.Rook;
             }
             else if (piece == ChessPiece.WhiteQueen || piece == ChessPiece.BlackQueen)
             {
-                val += (int)PieceValues.Queen;
+                return (int)PieceValues.Queen;
             }
             else if (piece == ChessPiece.WhiteKing || piece == ChessPiece.BlackKing)
             {
-                val += (int)PieceValues.King;
+                return (int)PieceValues.King;
             }
             return val;
         }
@@ -1018,7 +745,7 @@ namespace StudentAI
                     ChessPiece piece = board[x, y];
                     if (piece == ChessPiece.BlackBishop || piece == ChessPiece.BlackQueen)
                     {
-                       int test = 0;
+                        int test = 0;
                     }
                     if (piece != ChessPiece.Empty)
                     {
@@ -1066,7 +793,7 @@ namespace StudentAI
             }
 
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-            this.Log("Can checking piece be taken");
+            //this.Log("Can checking piece be taken");
 
             for (int y = 0; y < 8; y++)
             {
@@ -1095,7 +822,7 @@ namespace StudentAI
         private bool CanKingBeBlocked(ChessBoard board, ChessLocation currentLoc, ChessColor color)
         {
             ChessColor enemyColor = color == ChessColor.White ? ChessColor.Black : ChessColor.White;
-            this.Log("Can king be blocked");
+            //this.Log("Can king be blocked");
 
             for (int y = 0; y < 8; y++)
             {
@@ -1109,13 +836,13 @@ namespace StudentAI
                         ChessMove move = new ChessMove(pieceLoc, currentLoc);
                         if (IsValidMove(board, move, enemyColor))
                         {
-                            this.Log("Piece checking king found");
+                            //this.Log("Piece checking king found");
                             if (piece != ChessPiece.WhiteKnight && piece != ChessPiece.BlackKnight)
                             {
                                 int d_x = pieceLoc.X - currentLoc.X;
                                 int d_y = pieceLoc.Y - currentLoc.Y;
 
-                                this.Log("d_x = " + d_x + ", d_y = " + d_y);
+                                //this.Log("d_x = " + d_x + ", d_y = " + d_y);
 
                                 int xDir = 0;
 
@@ -1133,14 +860,14 @@ namespace StudentAI
 
                                 int dist = Math.Abs(d_x) > Math.Abs(d_y) ? Math.Abs(d_x) : Math.Abs(d_y);
 
-                                this.Log("dist = " + dist);
+                                //this.Log("dist = " + dist);
 
                                 for (int i = 1; i < dist; i++)
                                 {
                                     int xLoc = currentLoc.X + xDir * i;
                                     int yLoc = currentLoc.Y + yDir * i;
 
-                                    this.Log("(xLoc, yLoc) = (" + xLoc + ", " + yLoc + ")");
+                                    //this.Log("(xLoc, yLoc) = (" + xLoc + ", " + yLoc + ")");
 
                                     ChessLocation blockLoc = new ChessLocation(xLoc, yLoc);
                                     for (int y2 = 0; y2 < 8; y2++)
@@ -1152,20 +879,20 @@ namespace StudentAI
                                             if (blockPiece != ChessPiece.Empty)
                                             {
                                                 //prints name of piece
-                                                this.Log(Enum.GetName(typeof(ChessPiece), blockPiece));
+                                                //this.Log(Enum.GetName(typeof(ChessPiece), blockPiece));
 
                                                 ChessLocation blockPieceLoc = new ChessLocation(x2, y2);
                                                 ChessMove blockMove = new ChessMove(blockPieceLoc, blockLoc);
                                                 if (IsValidMove(board, blockMove, color))
                                                 {
-                                                    this.Log("valid piece to block: " + Enum.GetName(typeof(ChessPiece), piece) + " at (" + x2 + ", " + y2 + ")");
+                                                    //this.Log("valid piece to block: " + Enum.GetName(typeof(ChessPiece), piece) + " at (" + x2 + ", " + y2 + ")");
                                                     ChessBoard tempBoard = board.Clone();
                                                     tempBoard[blockMove.To] = tempBoard[blockMove.From];
                                                     tempBoard[blockMove.From] = ChessPiece.Empty;
 
                                                     if (PieceThreatened(tempBoard, currentLoc, color).Count == 0)
                                                     {
-                                                        this.Log("move is valid and can block the check");
+                                                        //this.Log("move is valid and can block the check");
                                                         return true;
                                                     }
                                                 }
@@ -1611,9 +1338,9 @@ namespace StudentAI
         #region IChessAI Members that should be implemented as automatic properties and should NEVER be touched by students.
         /// <summary>
         /// This will return false when the framework starts running your AI. When the AI's time has run out,
-        /// then this method will return true. Once this method returns true, your AI should return a 
+        /// then this method will return true. Once this method returns true, your AI should return a
         /// move immediately.
-        /// 
+        ///
         /// You should NEVER EVER set this property!
         /// This property should be defined as an Automatic Property.
         /// This property SHOULD NOT CONTAIN ANY CODE!!!
@@ -1623,7 +1350,7 @@ namespace StudentAI
         /// <summary>
         /// Call this method to print out debug information. The framework subscribes to this event
         /// and will provide a log window for your debug messages.
-        /// 
+        ///
         /// You should NEVER EVER set this property!
         /// This property should be defined as an Automatic Property.
         /// This property SHOULD NOT CONTAIN ANY CODE!!!
@@ -1634,7 +1361,7 @@ namespace StudentAI
         /// <summary>
         /// Call this method to catch profiling information. The framework subscribes to this event
         /// and will print out the profiling stats in your log window.
-        /// 
+        ///
         /// You should NEVER EVER set this property!
         /// This property should be defined as an Automatic Property.
         /// This property SHOULD NOT CONTAIN ANY CODE!!!
@@ -1645,7 +1372,7 @@ namespace StudentAI
         /// <summary>
         /// Call this method to tell the framework what decision print out debug information. The framework subscribes to this event
         /// and will provide a debug window for your decision tree.
-        /// 
+        ///
         /// You should NEVER EVER set this property!
         /// This property should be defined as an Automatic Property.
         /// This property SHOULD NOT CONTAIN ANY CODE!!!

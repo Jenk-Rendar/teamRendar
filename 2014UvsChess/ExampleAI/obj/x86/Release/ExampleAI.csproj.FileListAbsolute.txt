@@ -1,0 +1,7 @@
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\bin\x86\Release\ExampleAI.dll
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\bin\x86\Release\ExampleAI.pdb
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\bin\x86\Release\UvsChess.exe
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\bin\x86\Release\UvsChess.pdb
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\obj\x86\Release\ExampleAI.csprojResolveAssemblyReference.cache
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\obj\x86\Release\ExampleAI.dll
+D:\Users\Omega_Prime\Google Drive\GitHub\teamRendar (1)\2014UvsChess\ExampleAI\obj\x86\Release\ExampleAI.pdb
